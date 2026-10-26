@@ -235,6 +235,9 @@ details.box[open]>summary::after{content:"－"}
 .hintrow .btn{flex:1}
 .player--ex{max-width:420px;margin-inline:auto}
 .split{display:flex;flex-direction:column;gap:18px}
+.shotlabel{display:flex;flex-direction:column;gap:2px;background:var(--film);color:#FFFFFF;border-radius:12px;padding:10px 14px;font:800 14px/1.3 var(--f-ui)}
+.shotlabel .en{font:400 17px/1.3 var(--f-en);opacity:.9}
+.marklist .btn{white-space:nowrap;flex:none}
 .split__media,.split__main{display:flex;flex-direction:column;gap:18px;min-width:0}
 @media (min-width:880px){
   .wrap.is-wide{max-width:1200px}
@@ -455,7 +458,7 @@ function videoBlock(part,start,end,label){
   if(!canEmbed())return `<a class="btn btn--primary btn--wide" href="${link}" target="_blank" rel="noopener">▶ ${label}</a><p class="note">Видео откроется в YouTube.</p>`;
   return `${playerHTML(part,start,end)}<a class="ytlink" href="${link}" target="_blank" rel="noopener">Открыть в YouTube</a>`;
 }
-function playerHTML(part,start,end,cls,mute){return `<div class="player ${cls||''}"><div id="ytp" data-vid="${vidId(part)}" data-start="${start||0}" data-end="${end&&end>(start||0)?end:0}" data-mute="${mute?1:0}"></div></div>`;}
+function playerHTML(part,start,end,cls,mute,noui){return `<div class="player ${cls||''}"><div id="ytp" data-vid="${vidId(part)}" data-start="${start||0}" data-end="${end&&end>(start||0)?end:0}" data-mute="${mute?1:0}" data-noui="${noui?1:0}"></div></div>`;}
 function getT(id){const v=EDIT()?S.set.times[id]:null;if(v!=null)return v;const sub=SUBS[id];if(sub)return sub.start!=null?sub.start:null;const part=PARTS.find(p=>p.id===id);return part&&part.start!=null?part.start:null;}
 
 /* ---------- YouTube player: plays the real phrase from the cartoon ---------- */
@@ -468,11 +471,17 @@ function mountPlayer(){
   const d=el.dataset,pl={ready:false,timer:null};PL=pl;
   loadYT(()=>{
     if(PL!==pl||!document.getElementById('ytp'))return;
-    const vars={playsinline:1,rel:0,modestbranding:1};if(+d.mute)vars.mute=1;
+    const vars={playsinline:1,rel:0,modestbranding:1,iv_load_policy:3,disablekb:+d.noui?1:0};if(+d.mute)vars.mute=1;if(+d.noui){vars.controls=0;vars.fs=0;}
     if(+d.start)vars.start=Math.floor(+d.start);
     if(+d.end)vars.end=Math.ceil(+d.end);
     pl.p=new YT.Player('ytp',{videoId:d.vid,playerVars:vars,events:{onReady:()=>{pl.ready=true;try{+d.mute?pl.p.mute():pl.p.unMute();}catch(e){}}}});
   });
+}
+function playLoop(a,b,rate){
+  if(!PL||!PL.ready)return false;
+  try{const p=PL.p;clearInterval(PL.timer);p.mute();p.setPlaybackRate(rate||.25);p.seekTo(a,true);p.playVideo();
+    PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b-.05)p.seekTo(a,true);if(p.getPlayerState()===2)p.playVideo();}catch(e){clearInterval(PL.timer);}},150);
+    return true;}catch(e){return false;}
 }
 function playClip(a,b){
   if(!PL||!PL.ready)return false;
@@ -565,6 +574,7 @@ function render(){
   else if(V.s==='sub')app.innerHTML=subView(SUBS[V.sub]);
   else if(V.s==='ex'){app.innerHTML=exShell();drawEx();}
   else if(V.s==='mark'){app.innerHTML=markShell(SUBS[V.sub]);drawMark();}
+  else if(V.s==='shots'){app.innerHTML=shotsView(SUBS[V.sub]);}
   app.classList.toggle('is-wide',!!app.querySelector('.split__media .player, .split__media .watch'));
   mountPlayer();
 }
@@ -596,7 +606,7 @@ function partView(p){
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
       ${canEmbed()?`<small>Выберите сцену, включите видео и нажимайте кнопку, когда герой начинает каждую фразу.</small>
       <ul class="marklist">${p.subs.map(s=>{const n=lineTimes(s).filter(v=>v!=null).length;return `<li><span class="marklist__t"><span class="script__who">День ${s.day} · ${s.scene}</span><span class="en">${esc(s.title)}</span></span>
-        <span class="marklist__ctl"><span class="marklist__time">${n?n+'/'+s.L.length:'—'}</span><button class="btn btn--small" data-act="mark-open" data-id="${s.id}">🎬 ${n?'Изменить':'Разметить'}</button></span></li>`;}).join('')}</ul>`
+        <span class="marklist__ctl"><span class="marklist__time">${n?n+'/'+s.L.length:'—'}</span><button class="btn btn--small" data-act="mark-open" data-id="${s.id}">🎬 ${n?'Изменить':'Разметить'}</button>${n?`<button class="btn btn--small" data-act="shots-open" data-id="${s.id}" aria-label="Кадры">📷</button>`:''}</span></li>`;}).join('')}</ul>`
       :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
     ${exportBox(p)}
   </div></div>`:''}`;
@@ -620,7 +630,7 @@ function subView(s){
   ${EDIT()?`<details class="box" open><summary>Режим редактора: время и кадры</summary><div class="box__in">
     <div class="field"><label for="t-${s.id}">Начало отрывка в видео</label><input id="t-${s.id}" data-in="time" data-id="${s.id}" inputmode="numeric" placeholder="мин:сек" value="${t!=null?fmt(t):''}"><small>Заполняется само, когда вы размечаете первую фразу. Менять вручную обычно не нужно.</small></div>
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
-      ${canEmbed()?`<button class="btn btn--wide" data-act="mark-open">🎬 Разметить фразы по видео</button><small>${lineTimes(s).some(v=>v!=null)?'Разметка есть: '+lineTimes(s).filter(v=>v!=null).length+' из '+s.L.length+' фраз.':'Пока не размечено, звучит голос робота.'}</small>`
+      ${canEmbed()?`<button class="btn btn--wide" data-act="mark-open">🎬 Разметить фразы по видео</button>${lineTimes(s).some(v=>v!=null)?'<button class="btn btn--wide" data-act="shots-open">📷 Сделать кадры для фраз</button>':''}<small>${lineTimes(s).some(v=>v!=null)?'Разметка есть: '+lineTimes(s).filter(v=>v!=null).length+' из '+s.L.length+' фраз.':'Пока не размечено, звучит голос робота.'}</small>`
         :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
     <p class="note">Можно заменить рисунок кадра на скриншот из мультика. Скриншоты пока хранятся только на этом устройстве: чтобы они были у всех, пришлите их Claude.</p>
     ${s.L.map(l=>{const has=!!getFrame(s.id,l.i);return `<div class="uprow">${frame(s,l,'xs')}<span class="script__txt">${esc(l.text)}</span>
@@ -628,6 +638,23 @@ function subView(s){
   </div></details>`:''}
   </div></div>`;
 }
+
+/* ---------- Screenshot mode: a clean, slow, looping, muted player for taking frame screenshots ---------- */
+let SH={k:0};
+function shotsView(s){
+  const ln=s.L[SH.k],c=clipOf(s,SH.k);
+  return `${topbar('sub','Кадры · '+s.scene)}
+  <p class="lead">Нажмите на фразу: видео медленно и без звука крутит её по кругу, без кнопок поверх кадра. Сделайте скриншот всего экрана в удачный момент, подпись над видео тоже должна попасть на скриншот. Потом пришлите скриншоты Claude.</p>
+  <div class="split"><div class="split__media">
+    <div class="shotlabel"><span>${esc(s.id)} · фраза ${SH.k+1}</span><span class="en">${esc(ln.text)}</span></div>
+    ${playerHTML(s.part,c?Math.floor(c[0]):0,0,'',true,true)}
+    <div class="btn-row"><button class="btn btn--small" data-act="shot-go" data-d="-1" ${SH.k===0?'disabled':''}>← Фраза ${SH.k}</button><button class="btn btn--small" data-act="shot-go" data-d="1" ${SH.k>=s.L.length-1?'disabled':''}>Фраза ${SH.k+2} →</button></div>
+  </div><div class="split__main">
+    <ol class="marklist">${s.L.map(l=>{const has=lineTimes(s)[l.i]!=null;return `<li class="${l.i===SH.k?'is-cur':''}"><span class="marklist__t"><span class="script__who">${l.i+1}. ${esc(l.who)}</span><span class="en">${esc(l.text)}</span></span>
+      ${has?`<button class="btn btn--small" data-act="shot-pick" data-i="${l.i}">📷 Показать</button>`:'<span class="mauto">не размечена</span>'}</li>`;}).join('')}</ol>
+  </div></div>`;
+}
+function shotStart(){const s=SUBS[V.sub],c=clipOf(s,SH.k);if(!c)return;let tries=0;const t=setInterval(()=>{if(playLoop(c[0],c[1],.25)||++tries>40)clearInterval(t);},250);}
 
 /* ---------- Marking phrases in the video (parent) ---------- */
 let M={k:0};
@@ -858,6 +885,9 @@ document.addEventListener('click',e=>{
     case 'pick-order':pickOrder(+el.dataset.i,el);break;
     case 'pick-gap':pickGap(+el.dataset.k,el);break;
     case 'pick-word':pickWord(+el.dataset.i,el);break;
+    case 'shots-open':{const ms=SUBS[el.dataset.id]||sub;SH={k:Math.max(0,lineTimes(ms).findIndex(v=>v!=null))};go({s:'shots',sub:ms.id});shotStart();break;}
+    case 'shot-pick':SH.k=+el.dataset.i;render();shotStart();break;
+    case 'shot-go':SH.k=Math.max(0,Math.min(sub.L.length-1,SH.k+ +el.dataset.d));render();shotStart();break;
     case 'mark-open':{const ms=SUBS[el.dataset.id]||sub;M={k:Math.max(0,lineTimes(ms).findIndex(v=>v==null))};if(lineTimes(ms).every(v=>v!=null))M.k=ms.L.length;go({s:'mark',sub:ms.id});break;}
     case 'mark-hit':{if(!PL||!PL.ready){toast('Сначала включите видео');break;}let t=0;try{t=PL.p.getCurrentTime();}catch(err){}if(!t){toast('Сначала включите видео');break;}
       setMark(sub,M.k,t-0.3);M.k++;drawMark();break;}
