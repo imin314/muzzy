@@ -342,7 +342,13 @@ const PARTS = [
 ];
 
 /* Baked-in video timings, pasted from the editor's export code (imin314.github.io/muzzy/#edit). */
-const TIMINGS = {};
+const TIMINGS = {
+  "p5":{"start":57,"video":"q5RydaehcOs"},
+  "p5-seasons":{"start":85,"lt":[86.1,91.6,96.6,101.8]},
+  "p5-months":{"start":114,"lt":[115.2,119.7,124.9,129,138]},
+  "p5-days":{"start":155,"lt":[156,170.7,175.6,180.5,185.3,190.1,194.6,199.2]},
+  "p5-interview":{"start":216,"lt":[null,217.8,220.7,221.8,224.5,226,229.1,231.2,233.4,235.5,237.4,239.3,241,242.8,244.7,248.5]},
+};
 
 const EXS = [
   {id:'order', n:1, icon:'🎞️', t:'По порядку',  d:'Расставь кадры, как в мультике'},
@@ -413,7 +419,7 @@ function videoBlock(part,start,end,label){
   return `${playerHTML(part,start,end)}<a class="ytlink" href="${link}" target="_blank" rel="noopener">Открыть в YouTube</a>`;
 }
 function playerHTML(part,start,end,cls){return `<div class="player ${cls||''}"><div id="ytp" data-vid="${vidId(part)}" data-start="${start||0}" data-end="${end&&end>(start||0)?end:0}"></div></div>`;}
-function getT(id){const v=S.set.times[id];if(v!=null)return v;const sub=SUBS[id];if(sub)return sub.start!=null?sub.start:null;const part=PARTS.find(p=>p.id===id);return part&&part.start!=null?part.start:null;}
+function getT(id){const v=EDIT()?S.set.times[id]:null;if(v!=null)return v;const sub=SUBS[id];if(sub)return sub.start!=null?sub.start:null;const part=PARTS.find(p=>p.id===id);return part&&part.start!=null?part.start:null;}
 
 /* ---------- YouTube player: plays the real phrase from the cartoon ---------- */
 let PL=null; const ytCbs=[];
@@ -437,12 +443,12 @@ function playClip(a,b){
     if(b!=null)PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b){p.pauseVideo();clearInterval(PL.timer);}}catch(e){clearInterval(PL.timer);}},80);
     return true;}catch(e){return false;}
 }
-function lineTimes(sub){const own=(S.set.lt||{})[sub.id];return own||sub.lt||[];}
+function lineTimes(sub){const own=EDIT()&&(S.set.lt||{})[sub.id];return own||sub.lt||[];}
 function clipOf(sub,i){
   const T=lineTimes(sub),a=T[i];if(a==null)return null;
   let b=null;for(let k=i+1;k<T.length;k++){if(T[k]!=null){b=T[k];break;}}
-  if(b==null){const n=nextStart(sub);b=n!=null&&n>a?n:a+5;}
-  return [a,Math.min(b,a+12)];
+  let last=false;if(b==null){last=true;const n=nextStart(sub);b=n!=null&&n>a?n:a+6;}
+  return [a,Math.min(b,a+(last?8:12))];
 }
 function hasClips(sub){return canEmbed()&&lineTimes(sub).some(v=>v!=null);}
 function sayLine(sub,ln,auto){
@@ -599,7 +605,7 @@ function drawMark(){
 }
 function fmt1(v){const m=Math.floor(v/60),sec=(v-m*60).toFixed(1);return m+':'+(sec<10?'0':'')+sec;}
 function setMark(s,i,v){S.set.lt=S.set.lt||{};const T=(S.set.lt[s.id]=lineTimes(s).slice());T[i]=Math.max(0,Math.round(v*10)/10);
-  if(i===0||getT(s.id)==null)S.set.times[s.id]=Math.max(0,Math.floor(T.find(x=>x!=null)-1));save();}
+  const f=T.filter(x=>x!=null);S.set.times[s.id]=Math.max(0,Math.floor(Math.min(...f)-1));save();}
 function exportMarks(part){const o={};o[part.id]={start:getT(part.id),video:vidId(part)};
   part.subs.forEach(s=>{const T=lineTimes(s),st=getT(s.id);if(st!=null||T.some(v=>v!=null))o[s.id]={start:st,lt:T.map(v=>v==null?null:v)};});return JSON.stringify(o);}
 function exportBox(part){return `<div class="field"><label for="markcode">Код разметки для Claude</label><small>Всё, что вы настроили здесь, хранится только на этом устройстве. Скопируйте код и пришлите его Claude: он впишет разметку в приложение, и она заработает на всех телефонах.</small>
