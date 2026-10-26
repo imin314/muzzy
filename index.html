@@ -287,6 +287,7 @@ const PARTS = [
       ['Both','And on {Sunday} we play {tennis}.','🎾'],
     ]},
     { id:'p5-interview', title:'When do you play football?', ru:'Интервью', scene:'Scene 5', lines:[
+      ['Caption','Who? {What}? Where? {When}? Why? When?','❓'],
       ['Interviewer','{When} do you play {football}?','🎤⚽'],
       ['Norman','On {Monday}!','⚽'],
       ['Interviewer','{When} do you play {basketball}?','🎤🏀'],
@@ -346,7 +347,7 @@ const TIMINGS = {
   "p5-seasons":{"start":85,"lt":[86.1,91.6,96.6,101.8]},
   "p5-months":{"start":114,"lt":[115.2,119.7,124.9,129,138]},
   "p5-days":{"start":155,"lt":[156,170.7,175.6,180.5,185.3,190.1,194.6,199.2]},
-  "p5-interview":{"start":216,"lt":[217.8,220.7,221.8,224.5,226,229.1,231.2,233.4,235.5,237.4,239.3,241,242.8,244.7,248.5]},
+  "p5-interview":{"start":216,"lt":[null,217.8,220.7,221.8,224.5,226,229.1,231.2,233.4,235.5,237.4,239.3,241,242.8,244.7,248.5]},
 };
 
 const EXS = [
@@ -442,7 +443,7 @@ function playClip(a,b){
     if(b!=null)PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b){p.pauseVideo();clearInterval(PL.timer);}}catch(e){clearInterval(PL.timer);}},80);
     return true;}catch(e){return false;}
 }
-function lineTimes(sub){const own=EDIT()&&(S.set.lt||{})[sub.id];return own||sub.lt||[];}
+function lineTimes(sub){let own=EDIT()&&(S.set.lt||{})[sub.id];if(own&&own.length>sub.L.length)own=null;return own||sub.lt||[];}
 function clipOf(sub,i){
   const T=lineTimes(sub),a=T[i];if(a==null)return null;
   let b=null;for(let k=i+1;k<T.length;k++){if(T[k]!=null){b=T[k];break;}}
