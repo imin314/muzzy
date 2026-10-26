@@ -542,8 +542,7 @@ function partView(p){
     <span class="scene__body"><span class="scene__title">${esc(s.title)}</span><span class="scene__ru">${s.ru} · ${s.scene}</span>${dots(s)}</span>
     ${s===nextSub&&!P(s.id).ex.order?'<span class="tag tag--go">Сегодня</span>':stateTag(s)}</button></li>`).join('')}</ul>
   ${EDIT()?`<div class="box" style="padding:16px"><div class="box__in" style="padding:0"><h2>Режим редактора</h2>
-    <div class="field"><label for="vid-${p.id}">Ссылка на видео YouTube</label><input id="vid-${p.id}" data-in="video" data-id="${p.id}" inputmode="url" placeholder="https://youtu.be/…" value="${esc(S.set.video[p.id]||'')}"><small>Пусто — используется ${p.video}.</small></div>
-    <div class="field"><label for="t-${p.id}">С какого момента начинается часть</label><input id="t-${p.id}" data-in="time" data-id="${p.id}" inputmode="numeric" placeholder="0:00" value="${getT(p.id)!=null?fmt(getT(p.id)):''}"><small>Формат мин:сек, например 12:40.</small></div>
+    <div class="field"><label for="t-${p.id}">Где в видео начинается ${p.title}</label><input id="t-${p.id}" data-in="time" data-id="${p.id}" inputmode="numeric" placeholder="0:00" value="${getT(p.id)!=null?fmt(getT(p.id)):''}"><small>Нужно, чтобы «Смотреть всю часть» пропускала заставку. Формат мин:сек, например 0:57.</small></div>
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
       ${canEmbed()?`<small>Выберите сцену, включите видео и нажимайте кнопку, когда герой начинает каждую фразу.</small>
       <ul class="marklist">${p.subs.map(s=>{const n=lineTimes(s).filter(v=>v!=null).length;return `<li><span class="marklist__t"><span class="script__who">День ${s.day} · ${s.scene}</span><span class="en">${esc(s.title)}</span></span>
@@ -567,7 +566,7 @@ function subView(s){
     ${p.ex[e.id]?'<span class="tag tag--done">✓</span>':''}</button>`).join('')}</div>
   <details class="box"><summary>Текст сцены</summary><div class="box__in"><ul class="script">${s.L.map(l=>`<li>${frame(s,l,'xs')}<span class="script__txt"><span class="script__who">${esc(l.who)}</span><span class="script__en">${esc(l.text)}</span></span><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Послушать">🔊</button></li>`).join('')}</ul></div></details>
   ${EDIT()?`<details class="box" open><summary>Режим редактора: время и кадры</summary><div class="box__in">
-    <div class="field"><label for="t-${s.id}">Начало отрывка в видео</label><input id="t-${s.id}" data-in="time" data-id="${s.id}" inputmode="numeric" placeholder="мин:сек" value="${t!=null?fmt(t):''}"><small>Например 3:25. Кнопка «Смотреть отрывок» откроет видео с этого места.</small></div>
+    <div class="field"><label for="t-${s.id}">Начало отрывка в видео</label><input id="t-${s.id}" data-in="time" data-id="${s.id}" inputmode="numeric" placeholder="мин:сек" value="${t!=null?fmt(t):''}"><small>Заполняется само, когда вы размечаете первую фразу. Менять вручную обычно не нужно.</small></div>
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
       ${canEmbed()?`<button class="btn btn--wide" data-act="mark-open">🎬 Разметить фразы по видео</button><small>${lineTimes(s).some(v=>v!=null)?'Разметка есть: '+lineTimes(s).filter(v=>v!=null).length+' из '+s.L.length+' фраз.':'Пока не размечено, звучит голос робота.'}</small>`
         :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
