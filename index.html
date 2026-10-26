@@ -221,6 +221,13 @@ details.box[open]>summary::after{content:"－"}
 .marklist li.is-cur{box-shadow:inset 0 0 0 3px var(--accent)}
 .marklist__t{min-width:0;display:flex;flex-direction:column;font-size:15px;line-height:1.25}
 .marklist__ctl{display:flex;align-items:center;gap:6px;flex:none}
+.marklist--edit li{flex-direction:column;align-items:stretch;gap:6px}
+.mhead{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.mrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.mlab{font:800 12px/1 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:62px}
+.mauto{font:600 12px/1 var(--f-ui);color:var(--muted)}
+.marklist__time.is-auto{opacity:.6}
+.nud--txt{font-size:14px}
 .marklist__time{font:700 13px/1 var(--f-ui);font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px;text-align:right}
 .nud{width:36px;height:36px;border-radius:50%;border:0;background:var(--surface-2);font:800 18px/1 var(--f-ui);cursor:pointer}
 .code{width:100%;font:13px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid var(--line);background:var(--surface-2);color:var(--ink);padding:10px;resize:vertical}
@@ -381,7 +388,7 @@ const EDIT = ()=>location.hash==='#edit';
 PARTS.forEach(p=>{const pt=TIMINGS[p.id];if(pt){if(pt.start!=null)p.start=pt.start;if(pt.video)p.video=pt.video;}});
 PARTS.forEach(p=>p.subs.forEach((s,k)=>{
   s.part=p; s.day=k+1; SUBS[s.id]=s;
-  const tm=TIMINGS[s.id];if(tm){if(tm.start!=null)s.start=tm.start;if(tm.lt)s.lt=tm.lt;}
+  const tm=TIMINGS[s.id];if(tm){if(tm.start!=null)s.start=tm.start;if(tm.lt)s.lt=tm.lt;if(tm.le)s.le=tm.le;}
   s.L=s.lines.map(([who,raw,art],i)=>{
     const text=raw.replace(/[{}]/g,'');
     return {i,who,raw,art,text,keys:[...raw.matchAll(/\{([^}]+)\}/g)].map(m=>m[1]),tokens:text.split(/\s+/)};
@@ -444,7 +451,13 @@ function playClip(a,b){
     return true;}catch(e){return false;}
 }
 function lineTimes(sub){let own=EDIT()&&(S.set.lt||{})[sub.id];if(own&&own.length>sub.L.length)own=null;return own||sub.lt||[];}
+function lineEnds(sub){let own=EDIT()&&(S.set.le||{})[sub.id];if(own&&own.length>sub.L.length)own=null;return own||sub.le||[];}
 function clipOf(sub,i){
+  const T=lineTimes(sub),a=T[i];if(a==null)return null;
+  const e=lineEnds(sub)[i];if(e!=null&&e>a)return [a,e];
+  return autoClip(sub,i);
+}
+function autoClip(sub,i){
   const T=lineTimes(sub),a=T[i];if(a==null)return null;
   let b=null;for(let k=i+1;k<T.length;k++){if(T[k]!=null){b=T[k];break;}}
   let last=false;if(b==null){last=true;const n=nextStart(sub);b=n!=null&&n>a?n:a+6;}
@@ -596,18 +609,25 @@ function drawMark(){
   const cur=s.L[k];
   el.innerHTML=`${cur?`<button class="btn btn--primary btn--wide markbig" data-act="mark-hit"><span>Фраза ${k+1} из ${s.L.length} началась</span><span class="en markbig__t">${esc(cur.text)}</span></button>`
       :'<div class="banner"><span class="banner__star">🎬</span><p><b>Все фразы размечены.</b> Нажмите ▶ у любой, чтобы проверить.</p></div>'}
+    ${k>0&&T[k-1]!=null?`<button class="btn btn--small btn--wide" data-act="mark-end-now" data-i="${k-1}">⏹ Фраза ${k} закончилась (если дальше пауза или музыка)</button>`:''}
     <div class="btn-row"><button class="btn btn--small" data-act="mark-back" ${k===0?'disabled':''}>← Предыдущая</button><button class="btn btn--small" data-act="mark-skip" ${cur?'':'disabled'}>Пропустить</button></div>
-    <ol class="marklist">${s.L.map(l=>`<li class="${l.i===k?'is-cur':''}"><span class="marklist__t"><span class="script__who">${esc(l.who)}</span><span class="en">${esc(l.text)}</span></span>
-      <span class="marklist__ctl"><span class="marklist__time">${T[l.i]!=null?fmt1(T[l.i]):'—'}</span>
-      ${T[l.i]!=null?`<button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="-0.3" aria-label="Раньше">−</button><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Проверить">▶</button><button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="0.3" aria-label="Позже">+</button>`:''}</span></li>`).join('')}</ol>
+    <p class="note">Конец фразы по умолчанию — начало следующей. Меняйте его, только если на ▶ слышно лишнее.</p>
+    <ol class="marklist marklist--edit">${s.L.map(l=>{const has=T[l.i]!=null,E=lineEnds(s)[l.i],c=has?clipOf(s,l.i):null;return `<li class="${l.i===k?'is-cur':''}">
+      <div class="mhead"><span class="marklist__t"><span class="script__who">${l.i+1}. ${esc(l.who)}</span><span class="en">${esc(l.text)}</span></span>${has?`<button class="speak" data-act="speak" data-i="${l.i}" aria-label="Проверить">▶</button>`:''}</div>
+      ${has?`<div class="mrow"><span class="mlab">Начало</span><button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="-0.3" aria-label="Начало раньше">−</button><span class="marklist__time">${fmt1(T[l.i])}</span><button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="0.3" aria-label="Начало позже">+</button></div>
+      <div class="mrow"><span class="mlab">Конец</span><button class="nud" data-act="mark-end" data-i="${l.i}" data-d="-0.3" aria-label="Конец раньше">−</button><span class="marklist__time ${E!=null?'':'is-auto'}">${fmt1(c[1])}</span><button class="nud" data-act="mark-end" data-i="${l.i}" data-d="0.3" aria-label="Конец позже">+</button>
+        <button class="nud nud--txt" data-act="mark-end-now" data-i="${l.i}" title="Конец = текущий момент видео">⏹</button>${E!=null?`<button class="linkbtn" data-act="mark-end-reset" data-i="${l.i}">авто</button>`:'<span class="mauto">авто</span>'}</div>`
+      :'<div class="mrow"><span class="mlab">Не размечена</span></div>'}</li>`;}).join('')}</ol>
     <button class="btn btn--good btn--wide" data-act="sub">Готово</button>
     <div class="box" style="padding:16px">${exportBox(s.part)}</div>`;
 }
 function fmt1(v){const m=Math.floor(v/60),sec=(v-m*60).toFixed(1);return m+':'+(sec<10?'0':'')+sec;}
 function setMark(s,i,v){S.set.lt=S.set.lt||{};const T=(S.set.lt[s.id]=lineTimes(s).slice());T[i]=Math.max(0,Math.round(v*10)/10);
   const f=T.filter(x=>x!=null);S.set.times[s.id]=Math.max(0,Math.floor(Math.min(...f)-1));save();}
+function setEnd(s,i,v){S.set.le=S.set.le||{};const E=(S.set.le[s.id]=lineEnds(s).slice());while(E.length<s.L.length)E.push(null);E[i]=v==null?null:Math.max(0,Math.round(v*10)/10);
+  if(E.every(x=>x==null))delete S.set.le[s.id];save();}
 function exportMarks(part){const o={};o[part.id]={start:getT(part.id),video:vidId(part)};
-  part.subs.forEach(s=>{const T=lineTimes(s),st=getT(s.id);if(st!=null||T.some(v=>v!=null))o[s.id]={start:st,lt:T.map(v=>v==null?null:v)};});return JSON.stringify(o);}
+  part.subs.forEach(s=>{const T=lineTimes(s),st=getT(s.id);if(st!=null||T.some(v=>v!=null)){o[s.id]={start:st,lt:T.map(v=>v==null?null:v)};const E=lineEnds(s);if(E.some(v=>v!=null))o[s.id].le=s.L.map((_,i)=>E[i]==null?null:E[i]);}});return JSON.stringify(o);}
 function exportBox(part){return `<div class="field"><label for="markcode">Код разметки для Claude</label><small>Всё, что вы настроили здесь, хранится только на этом устройстве. Скопируйте код и пришлите его Claude: он впишет разметку в приложение, и она заработает на всех телефонах.</small>
   <textarea id="markcode" class="code" readonly rows="4">${esc(exportMarks(part))}</textarea>
   <button class="btn btn--small" data-act="mark-copy">Скопировать код</button></div>`;}
@@ -770,6 +790,10 @@ document.addEventListener('click',e=>{
     case 'mark-back':M.k=Math.max(0,M.k-1);drawMark();break;
     case 'mark-skip':M.k++;drawMark();break;
     case 'mark-nudge':{const i=+el.dataset.i;setMark(sub,i,lineTimes(sub)[i]+ +el.dataset.d);drawMark();const c=clipOf(sub,i);if(c)playClip(c[0],c[1]);break;}
+    case 'mark-end':{const i=+el.dataset.i,c=clipOf(sub,i);if(!c)break;setEnd(sub,i,c[1]+ +el.dataset.d);drawMark();const c2=clipOf(sub,i);playClip(Math.max(c2[0],c2[1]-2),c2[1]);break;}
+    case 'mark-end-now':{const i=+el.dataset.i;let t=0;try{t=PL&&PL.ready?PL.p.getCurrentTime():0;}catch(err){}const a=lineTimes(sub)[i];
+      if(!t||a==null||t<=a){toast('Поставьте видео на место, где фраза закончилась');break;}setEnd(sub,i,t);drawMark();toast('Конец фразы '+(i+1)+': '+fmt1(t));break;}
+    case 'mark-end-reset':setEnd(sub,+el.dataset.i,null);drawMark();break;
     case 'mark-copy':{const ta=$('#markcode');const done=()=>toast('Код скопирован');try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();toast('Выделено, скопируйте вручную');});}catch(err){ta.select();toast('Выделено, скопируйте вручную');}break;}
     case 'hint-letter':X.rev=(X.rev||0)+1;drawEx();break;
     case 'hint-word':{const ln=sub.L[X.queue[0]];X.rev=nextWordExtra(ln,X.rev||0,S.set.bare);drawEx();break;}
