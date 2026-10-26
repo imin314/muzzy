@@ -143,7 +143,12 @@ h2{font-size:24px}
 .exlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .exlist .extile:nth-child(5){grid-column:1/-1;min-height:0}
 .curtainbox{background:var(--surface);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.cline{display:flex;flex-direction:column;padding:7px 8px;cursor:pointer}
+.cline{display:flex;gap:12px;align-items:center;padding:7px 8px;cursor:pointer}
+.cline__body{display:flex;flex-direction:column;min-width:0;flex:1}
+.cline__pic{border:0;background:none;padding:0;cursor:pointer;flex:none;border-radius:8px}
+.cline__pic.is-on .frame{box-shadow:0 0 0 3px var(--accent)}
+.split--scene .split__media{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;background:var(--bg);padding-bottom:8px}
+@media (max-width:879px){.split--scene .player--ex{width:72%}}
 .cline+.cline{border-top:1px solid var(--line)}
 .cline.is-peek{background:var(--sun-soft);border-radius:10px}
 .cline__who{font:800 11px/1.2 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -450,7 +455,7 @@ function videoBlock(part,start,end,label){
   if(!canEmbed())return `<a class="btn btn--primary btn--wide" href="${link}" target="_blank" rel="noopener">▶ ${label}</a><p class="note">Видео откроется в YouTube.</p>`;
   return `${playerHTML(part,start,end)}<a class="ytlink" href="${link}" target="_blank" rel="noopener">Открыть в YouTube</a>`;
 }
-function playerHTML(part,start,end,cls){return `<div class="player ${cls||''}"><div id="ytp" data-vid="${vidId(part)}" data-start="${start||0}" data-end="${end&&end>(start||0)?end:0}"></div></div>`;}
+function playerHTML(part,start,end,cls,mute){return `<div class="player ${cls||''}"><div id="ytp" data-vid="${vidId(part)}" data-start="${start||0}" data-end="${end&&end>(start||0)?end:0}" data-mute="${mute?1:0}"></div></div>`;}
 function getT(id){const v=EDIT()?S.set.times[id]:null;if(v!=null)return v;const sub=SUBS[id];if(sub)return sub.start!=null?sub.start:null;const part=PARTS.find(p=>p.id===id);return part&&part.start!=null?part.start:null;}
 
 /* ---------- YouTube player: plays the real phrase from the cartoon ---------- */
@@ -463,10 +468,10 @@ function mountPlayer(){
   const d=el.dataset,pl={ready:false,timer:null};PL=pl;
   loadYT(()=>{
     if(PL!==pl||!document.getElementById('ytp'))return;
-    const vars={playsinline:1,rel:0,modestbranding:1};
+    const vars={playsinline:1,rel:0,modestbranding:1};if(+d.mute)vars.mute=1;
     if(+d.start)vars.start=Math.floor(+d.start);
     if(+d.end)vars.end=Math.ceil(+d.end);
-    pl.p=new YT.Player('ytp',{videoId:d.vid,playerVars:vars,events:{onReady:()=>{pl.ready=true;}}});
+    pl.p=new YT.Player('ytp',{videoId:d.vid,playerVars:vars,events:{onReady:()=>{pl.ready=true;try{+d.mute?pl.p.mute():pl.p.unMute();}catch(e){}}}});
   });
 }
 function playClip(a,b){
@@ -665,7 +670,7 @@ function exportBox(part){return `<div class="field"><label for="markcode">Код
 function exShell(){
   const e=EXS.find(x=>x.id===X.ex);
   const c=hasClips(X.sub)?clipOf(X.sub,lineTimes(X.sub).findIndex(v=>v!=null)):null;
-  return `${topbar('sub',e.n+' · '+e.t)}<div class="split">${c?`<div class="split__media">${playerHTML(X.sub.part,Math.floor(c[0]),0,'player--ex')}</div>`:''}<div class="split__main"><div class="progress"><div class="bar"><i id="pbar" style="width:0%"></i></div><span id="pnum"></span></div><div id="stage" style="display:flex;flex-direction:column;gap:16px"></div></div></div>`;
+  return `${topbar('sub',e.n+' · '+e.t)}<div class="split ${X.ex==='scene'?'split--scene':''}">${c?`<div class="split__media">${playerHTML(X.sub.part,Math.floor(c[0]),0,'player--ex',X.ex==='scene')}</div>`:''}<div class="split__main"><div class="progress"><div class="bar"><i id="pbar" style="width:0%"></i></div><span id="pnum"></span></div><div id="stage" style="display:flex;flex-direction:column;gap:16px"></div></div></div>`;
 }
 function setProg(n,total){const b=$('#pbar'),t=$('#pnum');if(b)b.style.width=Math.round(n/total*100)+'%';if(t)t.textContent=n+' из '+total;}
 
@@ -675,7 +680,7 @@ function startEx(sub,ex){
   if(ex==='gaps'){X.li=0;X.bj=0;X.opts=null;X.off=[];}
   if(ex==='words'){X.lines=sub.L.filter(l=>l.tokens.length>=2);X.k=0;setupWords();}
   if(ex==='say'){X.queue=sub.L.map(l=>l.i);X.ok=0;X.open=false;}
-  if(ex==='scene'){X.cur=1;X.peek={};X.max=Math.max(...sub.L.map(l=>l.text.length));}
+  if(ex==='scene'){X.cur=0;X.peek={};X.max=Math.max(...sub.L.map(l=>l.text.length));}
   go({s:'ex',sub:sub.id,ex});
 }
 function setupWords(){const ln=X.lines[X.k];X.wpool=shuffleNot(ln.tokens.map((_,i)=>i),i=>ln.tokens[i]);X.got=[];X.miss=0;}
@@ -792,11 +797,11 @@ function finish(){
 /* Exercise 5: whole scene, vertical recall behind a sliding curtain */
 function drawScene(st){
   const s=X.sub;const pr=$('.progress');if(pr)pr.hidden=true;
-  st.innerHTML=`<p class="task">Расскажи всю сцену подряд. Видны первые буквы, шторку можно сдвинуть вправо, чтобы подсмотреть.</p>
-  <div class="curtainbox" id="cbox">${s.L.map(l=>`<div class="cline ${X.peek[l.i]?'is-peek':''}" data-act="peek" data-i="${l.i}"><span class="cline__who">${esc(l.who)}</span><span class="cline__txt en" id="cl-${l.i}"></span></div>`).join('')}</div>
+  st.innerHTML=`<p class="task">Расскажи всю сцену подряд. Если забыл, сдвинь шторку вправо${hasClips(s)?' или нажми на кадр, чтобы увидеть момент в мультике':''}.</p>
+  <div class="curtainbox" id="cbox">${s.L.map(l=>`<div class="cline ${X.peek[l.i]?'is-peek':''}" data-act="peek" data-i="${l.i}"><button class="cline__pic" data-act="cue-frame" data-i="${l.i}" aria-label="Показать момент в мультике">${frame(s,l,'xs')}</button><span class="cline__body"><span class="cline__who">${esc(l.who)}</span><span class="cline__txt en" id="cl-${l.i}"></span></span></div>`).join('')}</div>
   <div class="slider">
     <button class="nud" data-act="cur-step" data-d="-1" aria-label="Закрыть шторку на букву">←</button>
-    <input type="range" id="curtain" min="1" max="${X.max}" step="1" value="${X.cur}" aria-label="Шторка">
+    <input type="range" id="curtain" min="0" max="${X.max}" step="1" value="${X.cur}" aria-label="Шторка">
     <button class="nud" data-act="cur-step" data-d="1" aria-label="Открыть шторку на букву">→</button>
   </div>
   <div class="btn-row"><button class="btn btn--small" data-act="cur-reset">Закрыть шторку</button><button class="btn btn--small" data-act="cur-word">+ слово</button></div>
@@ -810,9 +815,9 @@ function paintCurtain(){
     const n=X.peek[l.i]?l.text.length:X.cur, vis=l.text.slice(0,n), rest=l.text.slice(n);
     el.innerHTML=esc(vis)+(rest?`<span class="shade">${esc(rest)}</span>`:'');});
   const r=document.getElementById('curtain');if(r&&+r.value!==X.cur)r.value=X.cur;
-  if(r)r.style.setProperty('--pct',((X.cur-1)/Math.max(1,X.max-1)*100)+'%');
+  if(r)r.style.setProperty('--pct',(X.cur/Math.max(1,X.max)*100)+'%');
 }
-function setCurtain(n){X.cur=Math.max(1,Math.min(X.max,n));paintCurtain();}
+function setCurtain(n){X.cur=Math.max(0,Math.min(X.max,n));paintCurtain();}
 function curtainWord(){
   // open to the end of the next word on the line that is shortest-revealed but not finished
   const s=X.sub;let best=null;
@@ -865,9 +870,11 @@ document.addEventListener('click',e=>{
     case 'mark-end-reset':setEnd(sub,+el.dataset.i,null);drawMark();break;
     case 'mark-copy':{const ta=$('#markcode');const done=()=>toast('Код скопирован');try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();toast('Выделено, скопируйте вручную');});}catch(err){ta.select();toast('Выделено, скопируйте вручную');}break;}
     case 'peek':if(drag&&drag.block){drag=null;break;}X.peek[+el.dataset.i]=!X.peek[+el.dataset.i];el.classList.toggle('is-peek');paintCurtain();break;
+    case 'cue-frame':{const i=+el.dataset.i,c=clipOf(sub,i);document.querySelectorAll('.cline__pic').forEach(b=>b.classList.toggle('is-on',b===el));
+      if(c&&PL&&PL.ready){try{PL.p.mute();}catch(err){}playClip(c[0],c[1]);}else toast('Для этой фразы нет момента в видео');break;}
     case 'cur-step':setCurtain(X.cur+ +el.dataset.d);break;
     case 'cur-word':curtainWord();break;
-    case 'cur-reset':X.peek={};document.querySelectorAll('.cline').forEach(c=>c.classList.remove('is-peek'));setCurtain(1);break;
+    case 'cur-reset':X.peek={};document.querySelectorAll('.cline').forEach(c=>c.classList.remove('is-peek'));setCurtain(0);break;
     case 'scene-done':finish();break;
     case 'hint-letter':X.rev=(X.rev||0)+1;drawEx();break;
     case 'hint-word':{const ln=sub.L[X.queue[0]];X.rev=nextWordExtra(ln,X.rev||0,S.set.bare);drawEx();break;}
