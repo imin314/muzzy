@@ -534,9 +534,14 @@ function partView(p){
     <span class="scene__day">День<b>${s.day}</b></span>
     <span class="scene__body"><span class="scene__title">${esc(s.title)}</span><span class="scene__ru">${s.ru} · ${s.scene}</span>${dots(s)}</span>
     ${s===nextSub&&!P(s.id).ex.order?'<span class="tag tag--go">Сегодня</span>':stateTag(s)}</button></li>`).join('')}</ul>
-  <details class="box"><summary>Для родителя: видео</summary><div class="box__in">
+  <details class="box"><summary>Для родителя: видео и разметка фраз</summary><div class="box__in">
     <div class="field"><label for="vid-${p.id}">Ссылка на видео YouTube</label><input id="vid-${p.id}" data-in="video" data-id="${p.id}" inputmode="url" placeholder="https://youtu.be/…" value="${esc(S.set.video[p.id]||'')}"><small>Пусто — используется ${p.video}.</small></div>
     <div class="field"><label for="t-${p.id}">С какого момента начинается часть</label><input id="t-${p.id}" data-in="time" data-id="${p.id}" inputmode="numeric" placeholder="0:00" value="${getT(p.id)!=null?fmt(getT(p.id)):''}"><small>Формат мин:сек, например 12:40.</small></div>
+    <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
+      ${canEmbed()?`<small>Выберите сцену, включите видео и нажимайте кнопку, когда герой начинает каждую фразу.</small>
+      <ul class="marklist">${p.subs.map(s=>{const n=lineTimes(s).filter(v=>v!=null).length;return `<li><span class="marklist__t"><span class="script__who">День ${s.day} · ${s.scene}</span><span class="en">${esc(s.title)}</span></span>
+        <span class="marklist__ctl"><span class="marklist__time">${n?n+'/'+s.L.length:'—'}</span><button class="btn btn--small" data-act="mark-open" data-id="${s.id}">🎬 ${n?'Изменить':'Разметить'}</button></span></li>`;}).join('')}</ul>`
+      :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
   </div></details>`;
 }
 
@@ -745,7 +750,7 @@ document.addEventListener('click',e=>{
     case 'pick-order':pickOrder(+el.dataset.i,el);break;
     case 'pick-gap':pickGap(+el.dataset.k,el);break;
     case 'pick-word':pickWord(+el.dataset.i,el);break;
-    case 'mark-open':M={k:Math.max(0,lineTimes(sub).findIndex(v=>v==null))};if(lineTimes(sub).every(v=>v!=null))M.k=sub.L.length;go({s:'mark',sub:sub.id});break;
+    case 'mark-open':{const ms=SUBS[el.dataset.id]||sub;M={k:Math.max(0,lineTimes(ms).findIndex(v=>v==null))};if(lineTimes(ms).every(v=>v!=null))M.k=ms.L.length;go({s:'mark',sub:ms.id});break;}
     case 'mark-hit':{if(!PL||!PL.ready){toast('Сначала включите видео');break;}let t=0;try{t=PL.p.getCurrentTime();}catch(err){}if(!t){toast('Сначала включите видео');break;}
       setMark(sub,M.k,t-0.3);M.k++;drawMark();break;}
     case 'mark-back':M.k=Math.max(0,M.k-1);drawMark();break;
