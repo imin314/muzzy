@@ -341,6 +341,9 @@ const PARTS = [
   ]},
 ];
 
+/* Baked-in video timings, pasted from the editor's export code (imin314.github.io/muzzy/#edit). */
+const TIMINGS = {};
+
 const EXS = [
   {id:'order', n:1, icon:'🎞️', t:'По порядку',  d:'Расставь кадры, как в мультике'},
   {id:'gaps',  n:2, icon:'🧩', t:'Пропуски',    d:'Выбери пропущенные слова'},
@@ -368,8 +371,11 @@ const PRAISE = ['Great!','Well done!','Super!','Yes!','Brilliant!','Good job!','
 const TINT = {norman:'--sp-norman',wife:'--sp-wife',interviewer:'--sp-interviewer',muzzy:'--sp-muzzy',bob:'--sp-bob',boy:'--sp-boy',voice:'--sp-voice',both:'--sp-both',caption:'--sp-caption'};
 
 const SUBS = {};
+const EDIT = ()=>location.hash==='#edit';
+PARTS.forEach(p=>{const pt=TIMINGS[p.id];if(pt){if(pt.start!=null)p.start=pt.start;if(pt.video)p.video=pt.video;}});
 PARTS.forEach(p=>p.subs.forEach((s,k)=>{
   s.part=p; s.day=k+1; SUBS[s.id]=s;
+  const tm=TIMINGS[s.id];if(tm){if(tm.start!=null)s.start=tm.start;if(tm.lt)s.lt=tm.lt;}
   s.L=s.lines.map(([who,raw,art],i)=>{
     const text=raw.replace(/[{}]/g,'');
     return {i,who,raw,art,text,keys:[...raw.matchAll(/\{([^}]+)\}/g)].map(m=>m[1]),tokens:text.split(/\s+/)};
@@ -521,7 +527,8 @@ function homeView(){
     <div class="partcard__head"><span class="partcard__title">${p.title}</span><span class="tag ${done===p.subs.length?'tag--done':'tag--go'}">${done} из ${p.subs.length} сцен</span></div>
     <div class="bar"><i style="width:${Math.round(done/p.subs.length*100)}%"></i></div>
     <span class="note">${p.ru} · ${p.subs.length} сцен для заучивания</span></button>`;}).join('')}
-  <p class="note">Новые части будут появляться в этом списке.</p>`;
+  <p class="note">Новые части будут появляться в этом списке.</p>
+  ${EDIT()?'<div class="banner"><span class="banner__star">🛠️</span><p><b>Режим редактора.</b> Откройте часть: внизу будут разметка фраз и код для Claude.</p></div>':''}`;
 }
 
 function partView(p){
@@ -534,7 +541,7 @@ function partView(p){
     <span class="scene__day">День<b>${s.day}</b></span>
     <span class="scene__body"><span class="scene__title">${esc(s.title)}</span><span class="scene__ru">${s.ru} · ${s.scene}</span>${dots(s)}</span>
     ${s===nextSub&&!P(s.id).ex.order?'<span class="tag tag--go">Сегодня</span>':stateTag(s)}</button></li>`).join('')}</ul>
-  <details class="box"><summary>Для родителя: видео и разметка фраз</summary><div class="box__in">
+  ${EDIT()?`<div class="box" style="padding:16px"><div class="box__in" style="padding:0"><h2>Режим редактора</h2>
     <div class="field"><label for="vid-${p.id}">Ссылка на видео YouTube</label><input id="vid-${p.id}" data-in="video" data-id="${p.id}" inputmode="url" placeholder="https://youtu.be/…" value="${esc(S.set.video[p.id]||'')}"><small>Пусто — используется ${p.video}.</small></div>
     <div class="field"><label for="t-${p.id}">С какого момента начинается часть</label><input id="t-${p.id}" data-in="time" data-id="${p.id}" inputmode="numeric" placeholder="0:00" value="${getT(p.id)!=null?fmt(getT(p.id)):''}"><small>Формат мин:сек, например 12:40.</small></div>
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
@@ -542,7 +549,8 @@ function partView(p){
       <ul class="marklist">${p.subs.map(s=>{const n=lineTimes(s).filter(v=>v!=null).length;return `<li><span class="marklist__t"><span class="script__who">День ${s.day} · ${s.scene}</span><span class="en">${esc(s.title)}</span></span>
         <span class="marklist__ctl"><span class="marklist__time">${n?n+'/'+s.L.length:'—'}</span><button class="btn btn--small" data-act="mark-open" data-id="${s.id}">🎬 ${n?'Изменить':'Разметить'}</button></span></li>`;}).join('')}</ul>`
       :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
-  </div></details>`;
+    ${exportBox(p)}
+  </div></div>`:''}`;
 }
 
 function nextStart(s){const subs=s.part.subs,i=subs.indexOf(s);for(let k=i+1;k<subs.length;k++){const v=getT(subs[k].id);if(v!=null)return v;}return null;}
@@ -553,20 +561,20 @@ function subView(s){
   <div class="hero" style="padding-top:0"><p class="eyebrow">День ${s.day} · ${s.scene}</p><h1 class="en" style="font-family:var(--f-display)">${esc(s.title)}</h1><p class="lead">${s.ru}</p></div>
   ${done?`<div class="banner"><span class="banner__star">⭐</span><p>${due?'<b>Пора повторить!</b> Начни со «Скажи сам», это займёт пару минут.':'<b>Сцена выучена!</b> Можно рассказывать учительнице.'}</p></div>`:''}
   <div class="watch">${videoBlock(s.part,t!=null?t:getT(s.part.id),t!=null?nextStart(s):null,'Смотреть отрывок')}
-  ${t!=null?'':'<p class="note">Время отрывка ещё не задано, видео начнётся с начала части. Его можно задать внизу, в разделе для родителя.</p>'}</div>
+  ${t!=null||!EDIT()?'':'<p class="note">Время отрывка ещё не задано, видео начнётся с начала части.</p>'}</div>
   <div class="exlist">${EXS.map(e=>`<button class="extile ${p.ex[e.id]?'is-done':''} ${!done&&e===next?'is-next':''}" data-act="ex" data-id="${e.id}">
     <span class="extile__icon" aria-hidden="true">${e.icon}</span><span class="extile__n">Упражнение ${e.n}</span><span class="extile__t">${e.t}</span><span class="extile__d">${e.d}</span>
     ${p.ex[e.id]?'<span class="tag tag--done">✓</span>':''}</button>`).join('')}</div>
   <details class="box"><summary>Текст сцены</summary><div class="box__in"><ul class="script">${s.L.map(l=>`<li>${frame(s,l,'xs')}<span class="script__txt"><span class="script__who">${esc(l.who)}</span><span class="script__en">${esc(l.text)}</span></span><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Послушать">🔊</button></li>`).join('')}</ul></div></details>
-  <details class="box"><summary>Для родителя: время и кадры</summary><div class="box__in">
+  ${EDIT()?`<details class="box" open><summary>Режим редактора: время и кадры</summary><div class="box__in">
     <div class="field"><label for="t-${s.id}">Начало отрывка в видео</label><input id="t-${s.id}" data-in="time" data-id="${s.id}" inputmode="numeric" placeholder="мин:сек" value="${t!=null?fmt(t):''}"><small>Например 3:25. Кнопка «Смотреть отрывок» откроет видео с этого места.</small></div>
     <div class="field"><label>Фразы из мультика вместо робота-голоса</label>
       ${canEmbed()?`<button class="btn btn--wide" data-act="mark-open">🎬 Разметить фразы по видео</button><small>${lineTimes(s).some(v=>v!=null)?'Разметка есть: '+lineTimes(s).filter(v=>v!=null).length+' из '+s.L.length+' фраз.':'Пока не размечено, звучит голос робота.'}</small>`
         :'<small>Работает в версии на GitHub Pages: claude.ai не даёт встраивать YouTube.</small>'}</div>
-    <p class="note">Можно заменить рисунок кадра на скриншот из мультика: сделайте скриншот на телефоне во время просмотра и загрузите его к нужной фразе.</p>
+    <p class="note">Можно заменить рисунок кадра на скриншот из мультика. Скриншоты пока хранятся только на этом устройстве: чтобы они были у всех, пришлите их Claude.</p>
     ${s.L.map(l=>{const has=!!getFrame(s.id,l.i);return `<div class="uprow">${frame(s,l,'xs')}<span class="script__txt">${esc(l.text)}</span>
       <span style="display:flex;flex-direction:column;align-items:center"><label class="btn btn--small upbtn">${has?'Заменить':'Кадр'}<input type="file" accept="image/*" data-up="${l.i}" id="up-${s.id}-${l.i}"></label>${has?`<button class="linkbtn" data-act="unframe" data-i="${l.i}">убрать</button>`:''}</span></div>`;}).join('')}
-  </div></details>`;
+  </div></details>`:''}`;
 }
 
 /* ---------- Marking phrases in the video (parent) ---------- */
@@ -588,15 +596,16 @@ function drawMark(){
       <span class="marklist__ctl"><span class="marklist__time">${T[l.i]!=null?fmt1(T[l.i]):'—'}</span>
       ${T[l.i]!=null?`<button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="-0.3" aria-label="Раньше">−</button><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Проверить">▶</button><button class="nud" data-act="mark-nudge" data-i="${l.i}" data-d="0.3" aria-label="Позже">+</button>`:''}</span></li>`).join('')}</ol>
     <button class="btn btn--good btn--wide" data-act="sub">Готово</button>
-    <details class="box"><summary>Перенести разметку на другое устройство</summary><div class="box__in">
-      <p class="note">Разметка хранится в этом браузере. Скопируйте код и пришлите его Claude: он впишет разметку прямо в приложение, и она будет работать везде.</p>
-      <textarea id="markcode" class="code" readonly rows="4">${esc(exportMarks(s.part))}</textarea>
-      <button class="btn btn--small" data-act="mark-copy">Скопировать код</button></div></details>`;
+    <div class="box" style="padding:16px">${exportBox(s.part)}</div>`;
 }
 function fmt1(v){const m=Math.floor(v/60),sec=(v-m*60).toFixed(1);return m+':'+(sec<10?'0':'')+sec;}
 function setMark(s,i,v){S.set.lt=S.set.lt||{};const T=(S.set.lt[s.id]=lineTimes(s).slice());T[i]=Math.max(0,Math.round(v*10)/10);
   if(i===0||getT(s.id)==null)S.set.times[s.id]=Math.max(0,Math.floor(T.find(x=>x!=null)-1));save();}
-function exportMarks(part){const o={};part.subs.forEach(s=>{const T=lineTimes(s);if(T.some(v=>v!=null))o[s.id]={start:getT(s.id),lt:T};});return JSON.stringify(o);}
+function exportMarks(part){const o={};o[part.id]={start:getT(part.id),video:vidId(part)};
+  part.subs.forEach(s=>{const T=lineTimes(s),st=getT(s.id);if(st!=null||T.some(v=>v!=null))o[s.id]={start:st,lt:T.map(v=>v==null?null:v)};});return JSON.stringify(o);}
+function exportBox(part){return `<div class="field"><label for="markcode">Код разметки для Claude</label><small>Всё, что вы настроили здесь, хранится только на этом устройстве. Скопируйте код и пришлите его Claude: он впишет разметку в приложение, и она заработает на всех телефонах.</small>
+  <textarea id="markcode" class="code" readonly rows="4">${esc(exportMarks(part))}</textarea>
+  <button class="btn btn--small" data-act="mark-copy">Скопировать код</button></div>`;}
 
 /* ---------- Exercises ---------- */
 function exShell(){
@@ -789,6 +798,7 @@ document.addEventListener('change',e=>{
   }
 });
 
+window.addEventListener('hashchange',()=>render());
 load();render();
 })();
 </script>
