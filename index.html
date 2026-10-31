@@ -144,17 +144,22 @@ h2{font-size:24px}
 .watch{display:flex;flex-direction:column;gap:8px;background:var(--surface);border-radius:var(--r);padding:16px}
 .exlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .exlist .extile:nth-child(5){grid-column:1/-1;min-height:0}
-.dub{list-style:none;margin:0;padding:12px 16px;background:var(--surface);border-radius:var(--r);display:flex;flex-direction:column;gap:8px}
-.dub li{display:flex;flex-direction:column;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.dub li:last-child{border-bottom:0;padding-bottom:0}
-.dub__who{font:800 11px/1.2 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.dub__txt{font:400 18px/1.35 var(--f-en);overflow-wrap:anywhere}
-.dubline{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:10px 8px;min-height:56px;font:400 clamp(22px,6.4vw,28px)/1.35 var(--f-en);text-align:center;overflow-wrap:anywhere}
-.dubline.is-open{color:var(--accent);font-weight:700;display:block}
-.dubline .gap{display:inline-block;height:.18em;border-radius:999px;background:var(--line);margin-bottom:.3em}
-.dubcur .hintrow{flex-wrap:wrap;gap:8px}
-.dubcur .hintrow .btn{flex:1 1 auto;white-space:nowrap;padding:0 12px}
-.dubline .kw{background:var(--sun-soft);border-radius:8px;padding:0 6px;font-weight:700}
+.dubbar{display:flex;flex-direction:column;gap:8px}
+.dubbar--top{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;background:var(--bg);padding-bottom:8px}
+.dubbar .hintrow{flex-wrap:nowrap;gap:6px}
+.dubbar .hintrow .btn{flex:1 1 0;min-width:0;white-space:nowrap;padding:0 6px;font-size:14px}
+.dubbar .btn--good{min-height:48px}
+.dubnote{text-align:center}
+.dlg{list-style:none;margin:0;padding:6px;background:var(--surface);border-radius:var(--r);display:flex;flex-direction:column;gap:0}
+.dl{display:flex;gap:10px;align-items:center;padding:5px 10px;border-radius:12px;border:3px solid transparent}
+.dl.is-cur{border-color:var(--accent);background:var(--accent-soft)}
+.dl__line{font:400 19px/1.4 var(--f-en);overflow-wrap:anywhere;min-width:0}
+.dl__who{font:800 13px/1 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
+.dl.is-cur .dl__who{color:var(--accent)}
+.dl__open{color:var(--accent);font-weight:700}
+.dl .gap{display:inline-block;height:.16em;border-radius:999px;background:var(--line);vertical-align:.15em}
+.dl.is-cur .gap{background:var(--muted);opacity:.5}
+.dl .kw{background:var(--sun-soft);border-radius:6px;padding:0 4px;font-weight:700}
 .split--scene .split__media{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;background:var(--bg);padding-bottom:8px}
 @media (max-width:879px){.split--scene .player--ex{width:72%}}
 .extile{position:relative;display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;background:var(--surface);border:0;border-radius:var(--r);padding:16px 14px;cursor:pointer;min-height:132px}
@@ -705,7 +710,7 @@ function exportBox(part){return `<div class="field"><label for="markcode">Код
 function exShell(){
   const e=EXS.find(x=>x.id===X.ex);
   const c=hasClips(X.sub)?clipOf(X.sub,lineTimes(X.sub).findIndex(v=>v!=null)):null;
-  return `${topbar('sub',e.n+' · '+e.t)}<div class="split ${X.ex==='scene'?'split--scene':''}">${c?`<div class="split__media">${playerHTML(X.sub.part,Math.floor(c[0]),0,'player--ex',X.ex==='scene')}</div>`:''}<div class="split__main"><div class="progress"><div class="bar"><i id="pbar" style="width:0%"></i></div><span id="pnum"></span></div><div id="stage" style="display:flex;flex-direction:column;gap:16px"></div></div></div>`;
+  return `${topbar('sub',e.n+' · '+e.t)}<div class="split ${X.ex==='scene'?'split--scene':''}">${c?`<div class="split__media">${playerHTML(X.sub.part,Math.floor(c[0]),0,'player--ex',X.ex==='scene')}${X.ex==='scene'?'<div id="dubbar" class="dubbar"></div>':''}</div>`:''}<div class="split__main">${!c&&X.ex==='scene'?'<div id="dubbar" class="dubbar dubbar--top"></div>':''}<div class="progress"><div class="bar"><i id="pbar" style="width:0%"></i></div><span id="pnum"></span></div><div id="stage" style="display:flex;flex-direction:column;gap:16px"></div></div></div>`;
 }
 function setProg(n,total){const b=$('#pbar'),t=$('#pnum');if(b)b.style.width=Math.round(n/total*100)+'%';if(t)t.textContent=n+' из '+total;}
 
@@ -715,7 +720,7 @@ function startEx(sub,ex){
   if(ex==='gaps'){X.li=0;X.bj=0;X.opts=null;X.off=[];}
   if(ex==='words'){X.lines=sub.L.filter(l=>l.tokens.length>=2);X.k=0;setupWords();}
   if(ex==='say'){X.queue=sub.L.map(l=>l.i);X.ok=0;X.open=false;}
-  if(ex==='scene'){X.k=-1;X.hint=false;X.reveal=false;}
+  if(ex==='scene'){X.k=-1;X.hint=false;X.reveal=false;X.confirm=false;}
   go({s:'ex',sub:sub.id,ex});
 }
 function setupWords(){const ln=X.lines[X.k];X.wpool=shuffleNot(ln.tokens.map((_,i)=>i),i=>ln.tokens[i]);X.got=[];X.miss=0;}
@@ -831,39 +836,35 @@ function finish(){
 }
 /* Exercise 5: dub the scene. The clip plays muted, the child says the line; hint shows key words;
    "Не знаю" shows the text and plays the clip with sound, then hides the text again. Said lines stay on screen. */
-function keyMask(ln){
-  return ln.raw.split(/\s+/).map(w=>/\{/.test(w)?`<span class="kw">${esc(w.replace(/[{}]/g,''))}</span>`
-    :`<span class="gap" style="width:${Math.max(1.6,w.length*.55)}em"></span>`).join(' ');
-}
-function blankMask(ln){return ln.tokens.map(w=>`<span class="gap" style="width:${Math.max(1.6,w.length*.55)}em"></span>`).join(' ');}
+function gapOf(w){return `<span class="gap" style="width:${Math.max(1.2,w.replace(/[^A-Za-z']/g,'').length*.5)}em"></span>`;}
+function keyMask(ln){return ln.raw.split(/\s+/).map(w=>/\{/.test(w)?`<span class="kw">${esc(w.replace(/[{}]/g,''))}</span>`:gapOf(w)).join(' ');}
+function blankMask(ln){return ln.tokens.map(gapOf).join(' ');}
 function drawScene(st){
   const s=X.sub,L=s.L,k=X.k,clips=hasClips(s);
   setProg(Math.max(0,Math.min(k,L.length)),L.length);
-  const said=L.slice(0,Math.max(0,k)).map(l=>`<li><span class="dub__who">${esc(l.who)}</span><span class="dub__txt en">${esc(l.text)}</span></li>`).join('');
-  let cur='';
-  if(k<0){
-    cur=`<div class="stagecard dubcur" id="dubcur"><p class="task" style="text-align:center">${clips?'Мультик будет без звука. Скажи каждую фразу за героя.':'Скажи каждую фразу за героя.'}</p>
-      <p class="note" style="text-align:center">Если забыл, есть подсказка. А если совсем не помнишь, нажми «Не знаю»: фраза прозвучит, и ты повторишь.</p>
-      <button class="btn btn--primary btn--wide" data-act="dub-start">▶ Начать</button></div>`;
-  }else if(k<L.length){
-    const ln=L[k], keys=ln.raw.includes('{');
-    cur=`<div class="stagecard dubcur" id="dubcur">
-      ${clips?'':frame(s,ln,'lg')}
-      <div class="who-big">${esc(ln.who)} говорит:</div>
-      <div class="dubline ${X.reveal?'is-open':''} en" aria-live="polite">${X.reveal?esc(ln.text):X.hint?keyMask(ln):blankMask(ln)}</div>
-      <div class="hintrow">
-        ${clips?'<button class="btn btn--small" data-act="dub-again">▶ Ещё раз</button>':''}
-        <button class="btn btn--small" data-act="dub-hint" ${X.hint||X.reveal||!keys?'disabled':''}>💡 Подсказка</button>
-        <button class="btn btn--small" data-act="dub-idk" ${X.reveal?'disabled':''}>🤷 Не знаю</button>
-      </div>
-      <button class="btn btn--good btn--wide" data-act="dub-ok">✓ Всё правильно</button>
-    </div>`;
-  }else{
-    cur=`<div class="banner" id="dubcur"><span class="banner__star">🎬</span><p><b>Вся сцена озвучена!</b> Вот весь текст, прочитай его ещё раз целиком.</p></div>
-      <button class="btn btn--primary btn--wide" data-act="scene-done">Готово ⭐</button>`;
-  }
-  st.innerHTML=`${said?`<ol class="dub">${said}</ol>`:''}${cur}`;
-  if(k>0){const el=document.getElementById('dubcur');if(el&&el.scrollIntoView)el.scrollIntoView({block:'end',behavior:'smooth'});}
+  // controls on top (inside the sticky video block when there is a video)
+  let bar;
+  if(k<0) bar=`<p class="note dubnote">${clips?'Мультик будет без звука. Скажи каждую фразу за героя.':'Скажи каждую фразу за героя.'} Забыл? Есть подсказка и кнопка «Показать».</p>
+    <button class="btn btn--primary btn--wide" data-act="dub-start">▶ Начать</button>`;
+  else if(k<L.length){const keys=L[k].raw.includes('{'),busy=X.confirm?'disabled':'';
+    bar=`<div class="hintrow">
+      ${clips?`<button class="btn btn--small" data-act="dub-again" ${busy}>▶ Ещё раз</button>`:''}
+      <button class="btn btn--small" data-act="dub-hint" ${X.hint||X.reveal||!keys?'disabled':''}>💡 Подсказка</button>
+      <button class="btn btn--small" data-act="dub-idk" ${X.reveal?'disabled':''}>👀 Показать</button></div>
+    <button class="btn btn--good btn--wide" data-act="dub-ok" ${busy}>${X.confirm?'🔊 Слушаем, как в мультике…':'✓ Всё правильно'}</button>`;}
+  else bar=`<p class="note dubnote"><b>Вся сцена озвучена!</b> Прочитай весь текст ещё раз.</p>
+    <button class="btn btn--primary btn--wide" data-act="scene-done">Готово ⭐</button>`;
+  const dlg=L.map(l=>{
+    const st2=l.i<k?'is-said':l.i===k?'is-cur':'';
+    const body=l.i<k||k>=L.length?esc(l.text):l.i===k?(X.reveal?`<span class="dl__open">${esc(l.text)}</span>`:X.hint?keyMask(l):blankMask(l)):blankMask(l);
+    return `<li class="dl ${st2}" id="dl-${l.i}">${!clips&&l.i===k?frame(s,l,'xs'):''}<span class="dl__line en"><b class="dl__who">${esc(l.who)}:</b> ${body}</span></li>`;}).join('');
+  const holder=document.getElementById('dubbar');
+  if(holder){holder.innerHTML=bar;st.innerHTML=`<ol class="dlg">${dlg}</ol>`;}
+  else st.innerHTML=`<div class="dubbar">${bar}</div><ol class="dlg">${dlg}</ol>`;
+  const cur=document.getElementById('dl-'+k);
+  if(cur&&k>0){const hb=holder&&holder.getBoundingClientRect(),r=cur.getBoundingClientRect();
+    const beside=hb&&hb.right<=r.left, top=(hb&&!beside?hb.bottom:80)+16, zone=top+(innerHeight-top)*.45;
+    if(r.top<top||r.top>zone)window.scrollBy({top:r.top-top-40,behavior:'smooth'});}
 }
 function whenReady(fn){let n=0;const t=setInterval(()=>{if((PL&&PL.ready)||++n>40){clearInterval(t);fn();}},200);}
 function dubPlay(withSound,onEnd){
@@ -875,7 +876,7 @@ function dubPlay(withSound,onEnd){
       X.revT=setTimeout(end,Math.max(3500,ln.text.length*120));}catch(e){X.revT=setTimeout(()=>onEnd&&onEnd(),3500);}
   }
 }
-function dubStep(){X.hint=false;X.reveal=false;clearTimeout(X.revT);drawEx();if(X.k>=0&&X.k<X.sub.L.length)dubPlay(false);}
+function dubStep(){X.hint=false;X.reveal=false;X.confirm=false;clearTimeout(X.revT);clearTimeout(X.okT);drawEx();if(X.k>=0&&X.k<X.sub.L.length)dubPlay(false);}
 
 function finishView(){
   const s=X.sub,p=P(s.id),all=allDone(s),next=EXS.find(e=>!p.ex[e.id]);
@@ -917,10 +918,13 @@ document.addEventListener('click',e=>{
     case 'mark-end-reset':setEnd(sub,+el.dataset.i,null);drawMark();break;
     case 'mark-copy':{const ta=$('#markcode');const done=()=>toast('Код скопирован');try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();toast('Выделено, скопируйте вручную');});}catch(err){ta.select();toast('Выделено, скопируйте вручную');}break;}
     case 'dub-start':X.k=0;X.hint=false;X.reveal=false;drawEx();whenReady(()=>{if(X&&X.ex==='scene'&&X.k===0)dubPlay(false);});break;
-    case 'dub-again':X.reveal=false;clearTimeout(X.revT);drawEx();dubPlay(false);break;
+    case 'dub-again':if(X.confirm)break;X.reveal=false;clearTimeout(X.revT);drawEx();dubPlay(false);break;
     case 'dub-hint':X.hint=true;drawEx();break;
-    case 'dub-idk':{X.reveal=true;drawEx();const k=X.k;dubPlay(true,()=>{if(X&&X.ex==='scene'&&X.k===k&&X.reveal){X.reveal=false;drawEx();}});break;}
-    case 'dub-ok':chime();toast(rnd(PRAISE));X.k++;dubStep();break;
+    case 'dub-idk':{if(X.confirm)break;X.reveal=true;drawEx();const k=X.k;dubPlay(true,()=>{if(X&&X.ex==='scene'&&X.k===k&&X.reveal&&!X.confirm){X.reveal=false;drawEx();}});break;}
+    case 'dub-ok':{if(X.confirm)break;chime();X.confirm=true;X.reveal=true;drawEx();
+      const k=X.k,c=clipOf(sub,sub.L[k].i);let done=false;
+      const next=()=>{if(done||!X||X.ex!=='scene'||X.k!==k)return;done=true;X.k++;dubStep();};
+      dubPlay(true,()=>setTimeout(next,500));X.okT=setTimeout(next,((c?c[1]-c[0]:4)+4)*1000);break;}
     case 'scene-done':finish();break;
     case 'hint-letter':X.rev=(X.rev||0)+1;drawEx();break;
     case 'hint-word':{const ln=sub.L[X.queue[0]];X.rev=nextWordExtra(ln,X.rev||0,S.set.bare);drawEx();break;}
