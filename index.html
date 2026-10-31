@@ -31,7 +31,6 @@
   --f-ui:'Nunito',system-ui,-apple-system,'Segoe UI',sans-serif;
   --f-en:'Andika','Nunito',system-ui,sans-serif;
   --r:18px;
-  --curtain:#B9C6E4; --curtain-2:#AAB8DB;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
@@ -43,7 +42,6 @@
     --film:#070A13; --hole:#C9D3E8;
     --sp-norman:#5A3A26; --sp-wife:#583049; --sp-interviewer:#2C3A6B; --sp-muzzy:#24503A; --sp-bob:#21486A;
     --sp-boy:#5A4A1C; --sp-voice:#3D3470; --sp-both:#5A302B; --sp-caption:#2D3550;
-    --curtain:#34426F; --curtain-2:#2D3A63;
     color-scheme:dark;
   }
 }
@@ -56,7 +54,6 @@
   --film:#070A13; --hole:#C9D3E8;
   --sp-norman:#5A3A26; --sp-wife:#583049; --sp-interviewer:#2C3A6B; --sp-muzzy:#24503A; --sp-bob:#21486A;
   --sp-boy:#5A4A1C; --sp-voice:#3D3470; --sp-both:#5A302B; --sp-caption:#2D3550;
-  --curtain:#34426F; --curtain-2:#2D3A63;
   color-scheme:dark;
 }
 
@@ -147,22 +144,19 @@ h2{font-size:24px}
 .watch{display:flex;flex-direction:column;gap:8px;background:var(--surface);border-radius:var(--r);padding:16px}
 .exlist{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .exlist .extile:nth-child(5){grid-column:1/-1;min-height:0}
-.curtainbox{background:var(--surface);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:2px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
-.cline{display:flex;gap:12px;align-items:center;padding:7px 8px;cursor:pointer}
-.cline__body{display:flex;flex-direction:column;min-width:0;flex:1}
-.cline__pic{border:0;background:none;padding:0;cursor:pointer;flex:none;border-radius:8px}
-.cline__pic.is-on .frame{box-shadow:0 0 0 3px var(--accent)}
+.dub{list-style:none;margin:0;padding:12px 16px;background:var(--surface);border-radius:var(--r);display:flex;flex-direction:column;gap:8px}
+.dub li{display:flex;flex-direction:column;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.dub li:last-child{border-bottom:0;padding-bottom:0}
+.dub__who{font:800 11px/1.2 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.dub__txt{font:400 18px/1.35 var(--f-en);overflow-wrap:anywhere}
+.dubline{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:10px 8px;min-height:56px;font:400 clamp(22px,6.4vw,28px)/1.35 var(--f-en);text-align:center;overflow-wrap:anywhere}
+.dubline.is-open{color:var(--accent);font-weight:700;display:block}
+.dubline .gap{display:inline-block;height:.18em;border-radius:999px;background:var(--line);margin-bottom:.3em}
+.dubcur .hintrow{flex-wrap:wrap;gap:8px}
+.dubcur .hintrow .btn{flex:1 1 auto;white-space:nowrap;padding:0 12px}
+.dubline .kw{background:var(--sun-soft);border-radius:8px;padding:0 6px;font-weight:700}
 .split--scene .split__media{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);z-index:3;background:var(--bg);padding-bottom:8px}
 @media (max-width:879px){.split--scene .player--ex{width:72%}}
-.cline+.cline{border-top:1px solid var(--line)}
-.cline.is-peek{background:var(--sun-soft);border-radius:10px}
-.cline__who{font:800 11px/1.2 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
-.cline__txt{font:400 19px/1.35 var(--f-en);overflow-wrap:anywhere}
-.shade{color:transparent;background:repeating-linear-gradient(90deg,var(--curtain) 0 6px,var(--curtain-2) 6px 12px);border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-.slider{display:flex;gap:10px;align-items:center}
-.slider input{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:14px;border-radius:999px;background:linear-gradient(90deg,var(--good) 0 var(--pct,0%),var(--curtain) var(--pct,0%));cursor:pointer}
-.slider input::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:var(--accent);border:4px solid var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.25)}
-.slider input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--accent);border:4px solid var(--surface)}
 .extile{position:relative;display:flex;flex-direction:column;gap:6px;align-items:flex-start;text-align:left;background:var(--surface);border:0;border-radius:var(--r);padding:16px 14px;cursor:pointer;min-height:132px}
 .extile__icon{font-size:30px;line-height:1}
 .extile__n{font:800 12px/1 var(--f-ui);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
@@ -408,7 +402,7 @@ const EXS = [
   {id:'gaps',  n:2, icon:'🧩', t:'Пропуски',    d:'Выбери пропущенные слова'},
   {id:'words', n:3, icon:'🔤', t:'Собери фразу', d:'Поставь слова по порядку'},
   {id:'say',   n:4, icon:'🎤', t:'Скажи сам',   d:'Скажи каждую фразу наизусть'},
-  {id:'scene', n:5, icon:'📜', t:'Вся сцена',   d:'Расскажи всю сцену подряд, открывая шторку'},
+  {id:'scene', n:5, icon:'📜', t:'Вся сцена',   d:'Озвучь мультик сам, фраза за фразой'},
 ];
 
 const CATS = {
@@ -498,10 +492,10 @@ function playLoop(a,b,rate){
     PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b-.05)p.seekTo(a,true);if(p.getPlayerState()===2)p.playVideo();}catch(e){clearInterval(PL.timer);}},150);
     return true;}catch(e){return false;}
 }
-function playClip(a,b){
+function playClip(a,b,onEnd){
   if(!PL||!PL.ready)return false;
-  try{const p=PL.p;clearInterval(PL.timer);p.seekTo(a,true);p.playVideo();
-    if(b!=null)PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b){p.pauseVideo();clearInterval(PL.timer);}}catch(e){clearInterval(PL.timer);}},80);
+  try{const p=PL.p;clearInterval(PL.timer);try{p.setPlaybackRate(1);}catch(e){}p.seekTo(a,true);p.playVideo();
+    if(b!=null)PL.timer=setInterval(()=>{try{if(p.getCurrentTime()>=b){p.pauseVideo();clearInterval(PL.timer);onEnd&&onEnd();}}catch(e){clearInterval(PL.timer);}},80);
     return true;}catch(e){return false;}
 }
 function lineTimes(sub){let own=EDIT()&&(S.set.lt||{})[sub.id];if(own&&own.length>sub.L.length)own=null;return own||sub.lt||[];}
@@ -722,7 +716,7 @@ function startEx(sub,ex){
   if(ex==='gaps'){X.li=0;X.bj=0;X.opts=null;X.off=[];}
   if(ex==='words'){X.lines=sub.L.filter(l=>l.tokens.length>=2);X.k=0;setupWords();}
   if(ex==='say'){X.queue=sub.L.map(l=>l.i);X.ok=0;X.open=false;}
-  if(ex==='scene'){X.cur=0;X.peek={};X.max=Math.max(...sub.L.map(l=>l.text.length));}
+  if(ex==='scene'){X.k=-1;X.hint=false;X.reveal=false;}
   go({s:'ex',sub:sub.id,ex});
 }
 function setupWords(){const ln=X.lines[X.k];X.wpool=shuffleNot(ln.tokens.map((_,i)=>i),i=>ln.tokens[i]);X.got=[];X.miss=0;}
@@ -836,49 +830,58 @@ function finish(){
   X.finished=true;X.wasAll=was;setProg(1,1);
   $('#pnum').textContent='Готово';chime();confetti();drawEx();
 }
-/* Exercise 5: whole scene, vertical recall behind a sliding curtain */
+/* Exercise 5: dub the scene. The clip plays muted, the child says the line; hint shows key words;
+   "Не знаю" shows the text and plays the clip with sound, then hides the text again. Said lines stay on screen. */
+function keyMask(ln){
+  return ln.raw.split(/\s+/).map(w=>/\{/.test(w)?`<span class="kw">${esc(w.replace(/[{}]/g,''))}</span>`
+    :`<span class="gap" style="width:${Math.max(1.6,w.length*.55)}em"></span>`).join(' ');
+}
+function blankMask(ln){return ln.tokens.map(w=>`<span class="gap" style="width:${Math.max(1.6,w.length*.55)}em"></span>`).join(' ');}
 function drawScene(st){
-  const s=X.sub;const pr=$('.progress');if(pr)pr.hidden=true;
-  st.innerHTML=`<p class="task">Расскажи всю сцену подряд. Если забыл, сдвинь шторку вправо${hasClips(s)?' или нажми на кадр, чтобы увидеть момент в мультике':''}.</p>
-  <div class="curtainbox" id="cbox">${s.L.map(l=>`<div class="cline ${X.peek[l.i]?'is-peek':''}" data-act="peek" data-i="${l.i}"><button class="cline__pic" data-act="cue-frame" data-i="${l.i}" aria-label="Показать момент в мультике">${frame(s,l,'xs')}</button><span class="cline__body"><span class="cline__who">${esc(l.who)}</span><span class="cline__txt en" id="cl-${l.i}"></span></span></div>`).join('')}</div>
-  <div class="slider">
-    <button class="nud" data-act="cur-step" data-d="-1" aria-label="Закрыть шторку на букву">←</button>
-    <input type="range" id="curtain" min="0" max="${X.max}" step="1" value="${X.cur}" aria-label="Шторка">
-    <button class="nud" data-act="cur-step" data-d="1" aria-label="Открыть шторку на букву">→</button>
-  </div>
-  <div class="btn-row"><button class="btn btn--small" data-act="cur-reset">Закрыть шторку</button><button class="btn btn--small" data-act="cur-word">+ слово</button></div>
-  <p class="msg">Нажми на строку, чтобы подсмотреть её целиком</p>
-  <button class="btn btn--good btn--wide" data-act="scene-done">Я рассказал всю сцену!</button>`;
-  paintCurtain();
+  const s=X.sub,L=s.L,k=X.k,clips=hasClips(s);
+  setProg(Math.max(0,Math.min(k,L.length)),L.length);
+  const said=L.slice(0,Math.max(0,k)).map(l=>`<li><span class="dub__who">${esc(l.who)}</span><span class="dub__txt en">${esc(l.text)}</span></li>`).join('');
+  let cur='';
+  if(k<0){
+    cur=`<div class="stagecard dubcur" id="dubcur"><p class="task" style="text-align:center">${clips?'Мультик будет без звука. Скажи каждую фразу за героя.':'Скажи каждую фразу за героя.'}</p>
+      <p class="note" style="text-align:center">Если забыл, есть подсказка. А если совсем не помнишь, нажми «Не знаю»: фраза прозвучит, и ты повторишь.</p>
+      <button class="btn btn--primary btn--wide" data-act="dub-start">▶ Начать</button></div>`;
+  }else if(k<L.length){
+    const ln=L[k], keys=ln.raw.includes('{');
+    cur=`<div class="stagecard dubcur" id="dubcur">
+      ${clips?'':frame(s,ln,'lg')}
+      <div class="who-big">${esc(ln.who)} говорит:</div>
+      <div class="dubline ${X.reveal?'is-open':''} en" aria-live="polite">${X.reveal?esc(ln.text):X.hint?keyMask(ln):blankMask(ln)}</div>
+      <div class="hintrow">
+        ${clips?'<button class="btn btn--small" data-act="dub-again">▶ Ещё раз</button>':''}
+        <button class="btn btn--small" data-act="dub-hint" ${X.hint||X.reveal||!keys?'disabled':''}>💡 Подсказка</button>
+        <button class="btn btn--small" data-act="dub-idk" ${X.reveal?'disabled':''}>🤷 Не знаю</button>
+      </div>
+      <button class="btn btn--good btn--wide" data-act="dub-ok">✓ Всё правильно</button>
+    </div>`;
+  }else{
+    cur=`<div class="banner" id="dubcur"><span class="banner__star">🎬</span><p><b>Вся сцена озвучена!</b> Вот весь текст, прочитай его ещё раз целиком.</p></div>
+      <button class="btn btn--primary btn--wide" data-act="scene-done">Готово ⭐</button>`;
+  }
+  st.innerHTML=`${said?`<ol class="dub">${said}</ol>`:''}${cur}`;
+  if(k>0){const el=document.getElementById('dubcur');if(el&&el.scrollIntoView)el.scrollIntoView({block:'end',behavior:'smooth'});}
 }
-function paintCurtain(){
-  const s=X.sub;
-  s.L.forEach(l=>{const el=document.getElementById('cl-'+l.i);if(!el)return;
-    const n=X.peek[l.i]?l.text.length:X.cur, vis=l.text.slice(0,n), rest=l.text.slice(n);
-    el.innerHTML=esc(vis)+(rest?`<span class="shade">${esc(rest)}</span>`:'');});
-  const r=document.getElementById('curtain');if(r&&+r.value!==X.cur)r.value=X.cur;
-  if(r)r.style.setProperty('--pct',(X.cur/Math.max(1,X.max)*100)+'%');
+function whenReady(fn){let n=0;const t=setInterval(()=>{if((PL&&PL.ready)||++n>40){clearInterval(t);fn();}},200);}
+function dubPlay(withSound,onEnd){
+  const s=X.sub,ln=s.L[X.k],c=clipOf(s,ln.i);
+  if(c&&PL&&PL.ready){try{withSound?(PL.p.unMute(),PL.p.setVolume(100)):PL.p.mute();}catch(e){}if(playClip(c[0],c[1],onEnd))return;}
+  if(withSound){
+    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(ln.text);u.lang='en-GB';if(voice)u.voice=voice;u.rate=.85;
+      let done=false;const end=()=>{if(!done){done=true;onEnd&&onEnd();}};u.onend=()=>setTimeout(end,600);speechSynthesis.speak(u);
+      X.revT=setTimeout(end,Math.max(3500,ln.text.length*120));}catch(e){X.revT=setTimeout(()=>onEnd&&onEnd(),3500);}
+  }
 }
-function setCurtain(n){X.cur=Math.max(0,Math.min(X.max,n));paintCurtain();}
-function curtainWord(){
-  // open to the end of the next word on the line that is shortest-revealed but not finished
-  const s=X.sub;let best=null;
-  s.L.forEach(l=>{if(X.cur>=l.text.length)return;const m=l.text.slice(X.cur).match(/^\W*\w[\w'\-]*/);if(m){const e=X.cur+m[0].length;if(best==null||e<best)best=e;}});
-  setCurtain(best==null?X.max:best);
-}
-let drag=null;
-document.addEventListener('pointerdown',e=>{const b=e.target.closest('#cbox');if(!b||!X||X.ex!=='scene')return;drag={x:e.clientX,n:X.cur,moved:false};});
-document.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x;if(Math.abs(dx)>6)drag.moved=true;if(drag.moved){e.preventDefault();setCurtain(drag.n+Math.round(dx/9));}},{passive:false});
-document.addEventListener('pointerup',()=>{if(drag&&drag.moved){drag.block=true;const d=drag;setTimeout(()=>{if(drag===d)drag=null;},0);}else drag=null;});
-document.addEventListener('keydown',e=>{if(!X||X.ex!=='scene'||X.finished||V.s!=='ex')return;if(e.target&&e.target.id==='curtain')return;
-  if(e.key==='ArrowRight'){e.preventDefault();e.shiftKey?curtainWord():setCurtain(X.cur+1);}
-  if(e.key==='ArrowLeft'){e.preventDefault();setCurtain(X.cur-1);}});
-document.addEventListener('input',e=>{if(e.target.id==='curtain')setCurtain(+e.target.value);});
+function dubStep(){X.hint=false;X.reveal=false;clearTimeout(X.revT);drawEx();if(X.k>=0&&X.k<X.sub.L.length)dubPlay(false);}
 
 function finishView(){
   const s=X.sub,p=P(s.id),all=allDone(s),next=EXS.find(e=>!p.ex[e.id]);
   const e=EXS.find(x=>x.id===X.ex);
-  const lines={order:`Все ${s.L.length} кадров на своих местах.`,gaps:'Все пропущенные слова найдены.',words:`Ты собрал ${X.lines?X.lines.length:''} фраз.`,say:'Ты сказал все фразы сам!',scene:'Ты рассказал всю сцену подряд, как на уроке!'}[X.ex];
+  const lines={order:`Все ${s.L.length} кадров на своих местах.`,gaps:'Все пропущенные слова найдены.',words:`Ты собрал ${X.lines?X.lines.length:''} фраз.`,say:'Ты сказал все фразы сам!',scene:'Ты озвучил всю сцену сам, как на уроке!'}[X.ex];
   return `<div class="finish"><div class="finish__star">⭐</div><h1>${rnd(PRAISE)}</h1>
   <p>${lines} +1 звезда. Всего звёзд: <b>${totalStars()}</b>.</p>
   ${all&&!X.wasAll?'<p><b>Вся сцена пройдена!</b> Можно рассказывать её учительнице. Через день-два загляни сюда и повтори «Скажи сам».</p>':''}
@@ -914,12 +917,11 @@ document.addEventListener('click',e=>{
       if(!t||a==null||t<=a){toast('Поставьте видео на место, где фраза закончилась');break;}setEnd(sub,i,t);drawMark();toast('Конец фразы '+(i+1)+': '+fmt1(t));break;}
     case 'mark-end-reset':setEnd(sub,+el.dataset.i,null);drawMark();break;
     case 'mark-copy':{const ta=$('#markcode');const done=()=>toast('Код скопирован');try{navigator.clipboard.writeText(ta.value).then(done,()=>{ta.select();toast('Выделено, скопируйте вручную');});}catch(err){ta.select();toast('Выделено, скопируйте вручную');}break;}
-    case 'peek':if(drag&&drag.block){drag=null;break;}X.peek[+el.dataset.i]=!X.peek[+el.dataset.i];el.classList.toggle('is-peek');paintCurtain();break;
-    case 'cue-frame':{const i=+el.dataset.i,c=clipOf(sub,i);document.querySelectorAll('.cline__pic').forEach(b=>b.classList.toggle('is-on',b===el));
-      if(c&&PL&&PL.ready){try{PL.p.mute();}catch(err){}playClip(c[0],c[1]);}else toast('Для этой фразы нет момента в видео');break;}
-    case 'cur-step':setCurtain(X.cur+ +el.dataset.d);break;
-    case 'cur-word':curtainWord();break;
-    case 'cur-reset':X.peek={};document.querySelectorAll('.cline').forEach(c=>c.classList.remove('is-peek'));setCurtain(0);break;
+    case 'dub-start':X.k=0;X.hint=false;X.reveal=false;drawEx();whenReady(()=>{if(X&&X.ex==='scene'&&X.k===0)dubPlay(false);});break;
+    case 'dub-again':X.reveal=false;clearTimeout(X.revT);drawEx();dubPlay(false);break;
+    case 'dub-hint':X.hint=true;drawEx();break;
+    case 'dub-idk':{X.reveal=true;drawEx();const k=X.k;dubPlay(true,()=>{if(X&&X.ex==='scene'&&X.k===k&&X.reveal){X.reveal=false;drawEx();}});break;}
+    case 'dub-ok':chime();toast(rnd(PRAISE));X.k++;dubStep();break;
     case 'scene-done':finish();break;
     case 'hint-letter':X.rev=(X.rev||0)+1;drawEx();break;
     case 'hint-word':{const ln=sub.L[X.queue[0]];X.rev=nextWordExtra(ln,X.rev||0,S.set.bare);drawEx();break;}
