@@ -153,6 +153,9 @@ h2{font-size:24px}
 .dlg{list-style:none;margin:0;padding:6px;background:var(--surface);border-radius:var(--r);display:flex;flex-direction:column;gap:0}
 .dl{display:flex;gap:10px;align-items:center;padding:5px 10px;border-radius:12px;border:3px solid transparent}
 .dl.is-cur{border-color:var(--accent);background:var(--accent-soft)}
+.dl__col{display:flex;flex-direction:column;min-width:0;gap:1px}
+.dl__ru{font:400 13px/1.3 var(--f-ui);color:var(--muted)}
+.script__ru{font:400 13px/1.3 var(--f-ui);color:var(--muted)}
 .dl__line{font:400 19px/1.4 var(--f-en);overflow-wrap:anywhere;min-width:0}
 .dl__who{font:800 13px/1 var(--f-ui);color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-right:2px}
 .dl.is-cur .dl__who{color:var(--accent)}
@@ -384,6 +387,16 @@ const PARTS = [
   ]},
 ];
 
+/* Russian translations, one per line, same order as the lines above. */
+const RU = {
+  'p5-seasons':['Осенью темнеет в семь.','Зимой темнеет в пять.','Весной темнеет в семь.','Летом темнеет в девять.'],
+  'p5-months':['Сентябрь, октябрь, ноябрь.','Декабрь, январь, февраль.','Март, апрель, май.','Июнь, июль, август.','Январь, февраль, март, апрель, май, июнь, июль, август, сентябрь.'],
+  'p5-days':['Понедельник, вторник, среда, четверг, пятница, суббота, воскресенье.','В понедельник я играю в футбол.','Во вторник я играю в баскетбол.','В среду я катаюсь на роликах.','В четверг я делаю зарядку.','В пятницу я хожу плавать.','В субботу я играю в гольф.','А в воскресенье мы играем в теннис.'],
+  'p5-interview':['Кто? Что? Где? Когда? Почему? Когда?','Когда вы играете в футбол?','В понедельник!','Когда вы играете в баскетбол?','Во вторник!','Когда вы катаетесь на роликах?','В среду.','Когда вы делаете зарядку?','В четверг.','Когда вы ходите плавать?','В пятницу.','Когда вы играете в гольф?','В субботу.','Когда вы играете в теннис?','В воскресенье. А сегодня как раз воскресенье.','И мы сейчас играем в теннис.'],
+  'p5-rooms':['Где комната принцессы Сильвии?','Вон там!','Где, на первом этаже?','Нет, на втором этаже.','О, на втором этаже три комнаты. Которая из них?','Та, что слева?','Нет.','Та, что справа?','Нет.','Та, что посередине?','Да.','Та, что посередине.'],
+  'p5-apple':['Ой-ой! Он плачет. Почему ты плачешь?','Потому что я не могу достать яблоко.','А почему ты не можешь достать яблоко?','Потому что я маленький.','А я могу достать яблоко.','Да.','Почему?','Потому что ты высокий.','Точно! Держи!','Спасибо. Пока-а!','Эй! Это моё яблоко и мой велосипед!','Вернись! Вернись. Это моё!','Попался! Ну, это мой велосипед?','Да, твой.','Да. Мой. А где моё яблоко?','Ты его не получишь.','Почему?','Потому что оно вот здесь.'],
+};
+
 /* Baked-in video timings, pasted from the editor's export code (imin314.github.io/muzzy/#edit). */
 const TIMINGS = {
   "p5":{"start":57,"video":"q5RydaehcOs"},
@@ -436,7 +449,7 @@ PARTS.forEach(p=>p.subs.forEach((s,k)=>{
   const tm=TIMINGS[s.id];if(tm){if(tm.start!=null)s.start=tm.start;if(tm.lt)s.lt=tm.lt;if(tm.le)s.le=tm.le;}
   s.L=s.lines.map(([who,raw,art],i)=>{
     const text=raw.replace(/[{}]/g,'');
-    return {i,who,raw,art,text,keys:[...raw.matchAll(/\{([^}]+)\}/g)].map(m=>m[1]),tokens:text.split(/\s+/)};
+    return {i,who,raw,art,text,ru:(RU[s.id]||[])[i]||'',keys:[...raw.matchAll(/\{([^}]+)\}/g)].map(m=>m[1]),tokens:text.split(/\s+/)};
   });
 }));
 
@@ -635,7 +648,7 @@ function subView(s){
   <div class="split"><div class="split__media">
   <div class="watch">${videoBlock(s.part,t!=null?t:getT(s.part.id),t!=null?nextStart(s):null,'Смотреть отрывок')}
   ${t!=null||!EDIT()?'':'<p class="note">Время отрывка ещё не задано, видео начнётся с начала части.</p>'}</div>
-  <details class="box"><summary>Текст сцены</summary><div class="box__in"><ul class="script">${s.L.map(l=>`<li>${frame(s,l,'xs')}<span class="script__txt"><span class="script__who">${esc(l.who)}</span><span class="script__en">${esc(l.text)}</span></span><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Послушать">🔊</button></li>`).join('')}</ul></div></details>
+  <details class="box"><summary>Текст сцены</summary><div class="box__in"><ul class="script">${s.L.map(l=>`<li>${frame(s,l,'xs')}<span class="script__txt"><span class="script__who">${esc(l.who)}</span><span class="script__en">${esc(l.text)}</span>${l.ru?`<span class="script__ru">${esc(l.ru)}</span>`:''}</span><button class="speak" data-act="speak" data-i="${l.i}" aria-label="Послушать">🔊</button></li>`).join('')}</ul></div></details>
   </div><div class="split__main">
   <div class="exlist">${EXS.map(e=>`<button class="extile ${p.ex[e.id]?'is-done':''} ${!done&&e===next?'is-next':''}" data-act="ex" data-id="${e.id}">
     <span class="extile__icon" aria-hidden="true">${e.icon}</span><span class="extile__n">Упражнение ${e.n}</span><span class="extile__t">${e.t}</span><span class="extile__d">${e.d}</span>
@@ -857,7 +870,7 @@ function drawScene(st){
   const dlg=L.map(l=>{
     const st2=l.i<k?'is-said':l.i===k?'is-cur':'';
     const body=l.i<k||k>=L.length?esc(l.text):l.i===k?(X.reveal?`<span class="dl__open">${esc(l.text)}</span>`:X.hint?keyMask(l):blankMask(l)):blankMask(l);
-    return `<li class="dl ${st2}" id="dl-${l.i}">${!clips&&l.i===k?frame(s,l,'xs'):''}<span class="dl__line en"><b class="dl__who">${esc(l.who)}:</b> ${body}</span></li>`;}).join('');
+    return `<li class="dl ${st2}" id="dl-${l.i}">${!clips&&l.i===k?frame(s,l,'xs'):''}<span class="dl__col"><span class="dl__line en"><b class="dl__who">${esc(l.who)}:</b> ${body}</span>${l.ru?`<span class="dl__ru">${esc(l.ru)}</span>`:''}</span></li>`;}).join('');
   const holder=document.getElementById('dubbar');
   if(holder){holder.innerHTML=bar;st.innerHTML=`<ol class="dlg">${dlg}</ol>`;}
   else st.innerHTML=`<div class="dubbar">${bar}</div><ol class="dlg">${dlg}</ol>`;
