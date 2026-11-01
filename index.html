@@ -385,6 +385,27 @@ const PARTS = [
       ['Boy','Because it\'s in {here}.','😋'],
     ]},
   ]},
+  { id:'p6', title:'Part VI', ru:'Часть 6', video:'QBkS2kppIFs', subs:[
+    { id:'p6-parade', title:'The first one\'s big', ru:'Парад Сильвий', scene:'Scene 3', lines:[
+      ['Sylvia 1','I\'m {big}.','👸'],
+      ['Sylvia 2','I\'m {bigger}.','👸⬆️'],
+      ['Norman','The {first} one\'s big. The {second} one\'s {bigger}.','1️⃣2️⃣'],
+      ['Sylvia 3','I\'m {small}.','👸⬇️'],
+      ['Norman','Yes. The {third} one\'s small.','3️⃣'],
+      ['Norman','And the {fourth} one\'s {smaller}.','4️⃣'],
+      ['Norman','The {fifth} is tall. The {sixth} is {taller}.','5️⃣6️⃣'],
+      ['Norman','The {seventh} is, er, {fat}.','7️⃣'],
+      ['Norman','And the {eighth} is...','8️⃣'],
+      ['Sylvia 8','{Fatter}. Fatter...','😂'],
+    ]},
+    { id:'p6-girl', title:'Who is that beautiful girl?', ru:'Песня Нормана', scene:'(g)', lines:[
+      ['Norman','{Who} is that {beautiful} girl?','😍👸'],
+      ['Norman','{What} is her {name}?','📛'],
+      ['Norman','{Where} does she come {from}?','🌍'],
+      ['Norman','{When} can I {see} her?','👀'],
+      ['Norman','{Why} am I {down} here?','⬇️🤔'],
+    ]},
+  ]},
 ];
 
 /* Russian translations, one per line, same order as the lines above. */
@@ -394,6 +415,8 @@ const RU = {
   'p5-days':['Понедельник, вторник, среда, четверг, пятница, суббота, воскресенье.','В понедельник я играю в футбол.','Во вторник я играю в баскетбол.','В среду я катаюсь на роликах.','В четверг я делаю зарядку.','В пятницу я хожу плавать.','В субботу я играю в гольф.','А в воскресенье мы играем в теннис.'],
   'p5-interview':['Кто? Что? Где? Когда? Почему? Когда?','Когда вы играете в футбол?','В понедельник!','Когда вы играете в баскетбол?','Во вторник!','Когда вы катаетесь на роликах?','В среду.','Когда вы делаете зарядку?','В четверг.','Когда вы ходите плавать?','В пятницу.','Когда вы играете в гольф?','В субботу.','Когда вы играете в теннис?','В воскресенье. А сегодня как раз воскресенье.','И мы сейчас играем в теннис.'],
   'p5-rooms':['Где комната принцессы Сильвии?','Вон там!','Где, на первом этаже?','Нет, на втором этаже.','О, на втором этаже три комнаты. Которая из них?','Та, что слева?','Нет.','Та, что справа?','Нет.','Та, что посередине?','Да.','Та, что посередине.'],
+  'p6-parade':['Я большая.','Я больше.','Первая большая. Вторая больше.','Я маленькая.','Да. Третья маленькая.','А четвёртая меньше.','Пятая высокая. Шестая выше.','Седьмая… э-э… толстая.','А восьмая…','Толще! Толще…'],
+  'p6-girl':['Кто эта красивая девушка?','Как её зовут?','Откуда она?','Когда я смогу её увидеть?','Почему я здесь, внизу?'],
   'p5-apple':['Ой-ой! Он плачет. Почему ты плачешь?','Потому что я не могу достать яблоко.','А почему ты не можешь достать яблоко?','Потому что я маленький.','А я могу достать яблоко.','Да.','Почему?','Потому что ты высокий.','Точно! Держи!','Спасибо. Пока-а!','Эй! Это моё яблоко и мой велосипед!','Вернись! Вернись. Это моё!','Попался! Ну, это мой велосипед?','Да, твой.','Да. Мой. А где моё яблоко?','Ты его не получишь.','Почему?','Потому что оно вот здесь.'],
 };
 
@@ -427,19 +450,19 @@ const CATS = {
   months:['January','February','March','April','May','June','July','August','September','October','November','December'],
   seasons:['autumn','winter','spring','summer'],
   numbers:['one','two','three','four','five','six','seven','eight','nine','ten'],
-  floors:['first','second','third','top'],
+  ordinals:['first','second','third','fourth','fifth','sixth','seventh','eighth','top'],
   qwords:['Who','What','Where','When','Why','Which',"Where's"],
   sports:['football','basketball','roller-skating','swimming','golf','tennis','exercises'],
   sides:['left','right','middle'],
   yesno:['is',"isn't",'can',"can't"],
-  size:['small','tall','big'],
+  size:['small','smaller','tall','taller','big','bigger','fat','fatter'],
   owner:['my','mine','yours','your'],
   place:['now','today','here','there','back','not'],
   answers:['Yes','No','Right','Thanks','Gotcha','Because'],
   things:['apple','bike','room','floor','clock'],
 };
 const PRAISE = ['Great!','Well done!','Super!','Yes!','Brilliant!','Good job!','Fantastic!'];
-const TINT = {norman:'--sp-norman',wife:'--sp-wife',interviewer:'--sp-interviewer',muzzy:'--sp-muzzy',bob:'--sp-bob',boy:'--sp-boy',voice:'--sp-voice',both:'--sp-both',caption:'--sp-caption'};
+const TINT = {norman:'--sp-norman',wife:'--sp-wife',interviewer:'--sp-interviewer',muzzy:'--sp-muzzy',bob:'--sp-bob',boy:'--sp-boy',voice:'--sp-voice',both:'--sp-both',caption:'--sp-caption',sylvia:'--sp-wife',king:'--sp-voice',queen:'--sp-both'};
 
 const SUBS = {};
 const EDIT = ()=>location.hash==='#edit';
@@ -574,7 +597,7 @@ function confetti(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)re
 
 /* ---------- Pieces ---------- */
 function frame(sub,ln,size){
-  const img=(EDIT()&&getFrame(sub.id,ln.i))||(FRAMES[sub.id]||[])[ln.i]||getFrame(sub.id,ln.i), tint=TINT[ln.who.toLowerCase()]||'--sp-caption';
+  const img=(EDIT()&&getFrame(sub.id,ln.i))||(FRAMES[sub.id]||[])[ln.i]||getFrame(sub.id,ln.i), tint=TINT[ln.who.toLowerCase().replace(/\s*\d+$/,'')]||'--sp-caption';
   return `<div class="frame frame--${size}" style="--tint:var(${tint})"><div class="frame__pic">${img?`<img src="${img}" alt="">`:`<span class="frame__art" aria-hidden="true">${ln.art}</span>`}</div><span class="frame__who">${esc(ln.who)}</span></div>`;
 }
 function topbar(back,title){
